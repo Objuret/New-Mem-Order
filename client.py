@@ -11,10 +11,11 @@
 #              with the same compositions; its reference is well-known,
 #              like a root path
 #
-# The compositions (structure IDs: 1 concat, 2 quote, 3 eval, 4 read, 5 write):
+# The compositions (structures: 1 concat, 2 quote, 3 write; demand `D` is a
+# grammar node, not a structure — core machinery per spec §3.1/A4):
 #
-#   read a thread:    eval(read(ref))
-#   post to thread:   write(ref, quote(concat(eval(read(ref)), line)))
+#   read a thread:    D(ref) — demanding = reading = firing, nothing else
+#   post to thread:   write(ref, quote(concat(D(ref), line)))
 #                     — the read-append-write is ONE instruction, so it
 #                     fires whole and indivisibly (spec §2)
 #   create thread:    concat(write(t/N, quote("")), write-index-entry)
@@ -27,8 +28,8 @@ import socket
 import sys
 
 import instruction
-from instruction import F, V
-from structures import CONCAT, EVAL, QUOTE, READ_FILE, WRITE_FILE
+from instruction import D, ERROR, F, V
+from structures import CONCAT, QUOTE, WRITE_FILE
 
 INDEX_REF = b"index"
 
@@ -38,14 +39,14 @@ def thread_ref(name):
 
 
 def read_instr(ref):
-    return F(EVAL, F(READ_FILE, V(ref)))
+    return D(ref)
 
 
 def post_instr(ref, line):
     return F(
         WRITE_FILE,
         V(ref),
-        F(QUOTE, F(CONCAT, F(EVAL, F(READ_FILE, V(ref))), V(line))),
+        F(QUOTE, F(CONCAT, D(ref), V(line))),
     )
 
 
@@ -74,13 +75,18 @@ class Client:
 
     def demand(self, instr):
         """Send an instruction, receive the output (spec §3: the demand is
-        the return path)."""
+        the return path). The reply is a value or the reserved error form —
+        distinguishable by construction, so a refusal raises here instead
+        of masquerading as content."""
         self.sock.sendall(instr)
         buf = b""
         while True:
             end = instruction.node_end(buf) if buf else None
             if end is not None:
-                return instruction.value_of(buf[:end])
+                tag, payload = instruction.payload_of(buf[:end])
+                if tag == ERROR:
+                    raise RuntimeError(payload.decode())
+                return payload
             chunk = self.sock.recv(65536)
             if not chunk:
                 raise ConnectionError("router closed the connection")

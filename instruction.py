@@ -2,10 +2,21 @@
 #
 # An instruction is a nested composition tree, encoded as bytes:
 #
-#   node  := value | fire
-#   value := 0x00 uvarint(len) bytes
-#   fire  := 0x01 uvarint(structure_id) uvarint(argc) node*
+#   node   := value | fire | demand | error
+#   value  := 0x00 uvarint(len) bytes
+#   fire   := 0x01 uvarint(structure_id) uvarint(argc) node*
+#   demand := 0x02 uvarint(len) reference-bytes
+#   error  := 0x03 uvarint(len) message-bytes
 #   uvarint := LEB128, unsigned, little-groups-first
+#
+# demand is core machinery, not a library structure (spec §3 step 1, A4):
+# firing it reads the unsent instruction at the reference and fires it —
+# demanding = reading = firing. The reference is a literal name, never
+# computed: the demander HOLDS it (A4).
+#
+# error is the reserved form for a firing the world refused (see
+# spec-amendments.md #2): a firing returns a value or an error,
+# distinguishable by construction, never by content convention.
 #
 # This encoding is simultaneously the file format, the wire format, and the
 # executable form. It is self-delimiting, so the wire needs no framing layer
@@ -19,6 +30,11 @@
 
 VALUE = 0x00
 FIRE = 0x01
+DEMAND = 0x02
+ERROR = 0x03
+
+# Tags whose body is uvarint(len) + bytes, like VALUE's.
+_LEN_PREFIXED = (VALUE, DEMAND, ERROR)
 
 
 def uvarint(n):
@@ -64,6 +80,16 @@ def F(structure_id, *arg_nodes):
     )
 
 
+def D(ref):
+    """Encode a demand node: fire the unsent instruction at this reference."""
+    return bytes([DEMAND]) + uvarint(len(ref)) + ref
+
+
+def E(message):
+    """Encode an error node: the reserved form for a refused firing."""
+    return bytes([ERROR]) + uvarint(len(message)) + message
+
+
 class BadTag(Exception):
     """A byte pattern that selects no grammar rule. Per spec §4 malformed
     input is unexpressible rather than rejected; at the software edge that
@@ -78,7 +104,7 @@ def node_end(buf, pos=0):
         return None
     tag = buf[pos]
     pos += 1
-    if tag == VALUE:
+    if tag in _LEN_PREFIXED:
         r = read_uvarint(buf, pos)
         if r is None:
             return None
@@ -104,22 +130,34 @@ def node_end(buf, pos=0):
 
 
 def value_of(node):
-    """Payload of a literal value node (used by demanders to unwrap outputs)."""
+    """Payload of a literal value node (used by demanders to unwrap outputs).
+    Raises BadTag on any other node kind — an error node must be looked at
+    with payload_of, never mistaken for content."""
     if node[0] != VALUE:
         raise BadTag("expected value node")
     length, pos = read_uvarint(node, 1)
     return node[pos : pos + length]
 
 
+def payload_of(node):
+    """(tag, payload) of a length-prefixed node (value, demand, or error)."""
+    tag = node[0]
+    if tag not in _LEN_PREFIXED:
+        raise BadTag("node has no payload")
+    length, pos = read_uvarint(node, 1)
+    return tag, node[pos : pos + length]
+
+
 def shape(buf, pos=0):
-    """Composition shape of a node: structure IDs with values elided.
-    Measurement instrumentation only (brief: repetition metric) — not part
-    of the model. Returns (shape_string, end_pos)."""
+    """Composition shape of a node: structure IDs with values elided
+    (values '·', demands 'D', errors 'E'). Measurement instrumentation only
+    (brief: repetition metric) — not part of the model.
+    Returns (shape_string, end_pos)."""
     tag = buf[pos]
     pos += 1
-    if tag == VALUE:
+    if tag in _LEN_PREFIXED:
         length, pos = read_uvarint(buf, pos)
-        return "·", pos + length
+        return {VALUE: "·", DEMAND: "D", ERROR: "E"}[tag], pos + length
     sid, pos = read_uvarint(buf, pos)
     argc, pos = read_uvarint(buf, pos)
     parts = []

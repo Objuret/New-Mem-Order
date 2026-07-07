@@ -23,6 +23,13 @@ and the spec's edge story (§2 "Terminal structure") doesn't yet say what
 comes back when the world refuses. Wants a decision at spec level, not
 runtime level.
 
+*Run-2 resolution:* errors got a reserved node form (`0x03`), core
+machinery like demand — a firing returns a value or an error,
+distinguishable by construction, and a refusal anywhere aborts the whole
+indivisible firing and propagates to the demander. Content saying "ERR:"
+is now just content. Spec wording proposed in spec-amendments.md #2,
+awaiting Jocke.
+
 ## 2. First contact with a missing reference
 
 Posting reads the current content first (`eval(read(ref))`), so posting to
@@ -54,9 +61,15 @@ Verdict: **model boundary, worth a spec sentence.** Not a flaw inside the
 model — the "no cell to clobber" argument is airtight up to the terminal —
 but §2's "any topology works" overstates once terminals share a target.
 
+*Run-2 resolution:* sentence drafted in spec-amendments.md #3, awaiting
+Jocke. The reviewer's sharper framing is adopted in the report: the
+mutation moved to the edge and got fenced; it didn't die. The model didn't
+eliminate the store — it shrank it to the filesystem and confined races
+structurally to terminals. Still a win, no longer oversold.
+
 ## 4. The demander must send bytes it just received back through the wire
 
-Post embeds `eval(read(ref))` *inside* the instruction, so the
+Post embeds a demand of the thread *inside* the instruction, so the
 read-append-write travels as one indivisible tree — good. But a client that
 first *reads* a thread and then wants to post something derived from what
 it read has no way to refer to "what you just gave me"; it must ship the
@@ -81,6 +94,39 @@ from the workload.
 
 Verdict: **habit flaw / tooling question.** Observability of a model with
 no state is its own topic; deferred like security.
+
+## 6. `eval` was a universal interpreter — the review caught the count-killer
+
+Run 1 shipped a five-structure library containing `eval` (fire arbitrary
+in-flight bytes). Quote + eval is the core of Lisp: with it resident, the
+§6 count stays flat *for any workload forever*, because all complexity can
+ride in values — which is precisely the failure branch §6 exists to
+detect. The measurement wasn't confirmed; it was disabled. Caught in
+external review, not by the builder.
+
+The grilling question — did the workload force eval? — had an empirical
+answer: **no.** Every `eval` in run 1 fired a stored literal-value
+instruction; none ever fired computed in-flight bytes. What the workload
+actually needed was *demand*: fire the unsent instruction a held reference
+names — which spec §3 step 1 and A4 already define as core machinery, not
+a verb. Run 2 moved demand into the instruction grammar (node `0x02`,
+literal reference only, per A4's "a name, nothing more"), deleted `eval`,
+and found `read-file` subsumed too. Library: **3**. Nothing in it can fire
+bytes.
+
+Residual honesty: universality didn't leave the *system* — write an
+instruction to a reference, then demand it, and you've run arbitrary code.
+But that path is the model's own definition of a program, it's what any
+OS-with-filesystem already permits, and crucially it is visible: it must
+pass through `write-file` and a reference, not hide inside a value. The
+§6 measurement watches the library, and the library is now all
+workload verbs.
+
+Verdict: **builder flaw, model vindicated on the evidence.** The strongest
+finding of the run: the workload, pressed, needed strictly less than a
+universal interpreter. Standing rule adopted: nothing that fires values
+enters the library, ever; if a workload seems to demand it, that is a §6
+falsification event and gets reported, not implemented.
 
 ## Not friction (things that just worked)
 

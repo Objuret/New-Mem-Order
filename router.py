@@ -78,15 +78,17 @@ def serve(port, data_dir):
 
                 counter = [0]
                 try:
-                    out = structures.fire(instr, counter)
-                except Exception as e:  # see friction-log.md: error channel
-                    out = b"ERR: " + str(e).encode()
+                    reply = instruction.V(structures.fire(instr, counter))
+                except (structures.FiringError, OSError) as e:
+                    # The reserved error form: distinguishable from content
+                    # by construction (spec-amendments.md #2).
+                    reply = instruction.E(str(e).encode())
 
                 sh, _ = instruction.shape(instr)
                 with open(stats_path, "a") as f:
                     f.write(f"{sh}\t{counter[0]}\n")
 
-                conn.sendall(instruction.V(out))
+                conn.sendall(reply)
 
 
 if __name__ == "__main__":
