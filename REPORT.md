@@ -1,9 +1,12 @@
 # Prototype Report — Message Board on the Activation Model
 
-Answers the brief's four measurements and the spec's §6 question for one
-real (small) workload. Numbers below are from the demo run of 2026-07-08
-(`python3 demo.py`, then `python3 report.py` to regenerate them —
-timestamps and ids will differ, shapes and counts will not).
+Answers the brief's four measurements and the spec's §6 question. Two
+phases: phase 1 (the message board) and phase 2 (computation pressure:
+queries over the phase-1 data). Numbers are from the demo run of
+2026-07-08 (`python3 demo.py`, then `python3 report.py` to regenerate —
+timestamps and ids will differ, shapes and counts will not). Phase-1
+sections are kept as written; phase 2 is appended at the end with the
+growth curve.
 
 ## What ran
 
@@ -94,9 +97,81 @@ growing, not the absolute 6. The next falsification pressure should come
 from a workload that wants computation (filtering, counting, comparing),
 which `concat` cannot absorb.
 
+---
+
+# Phase 2 — computation pressure (2026-07-08)
+
+The question ruled for this phase: how much does the library grow when a
+workload demands computation `concat` cannot absorb? Three queries over
+the existing board data, run in the demo *after* the router restart, so
+they provably operate on nothing but the surviving files:
+
+- **(a) find** posts containing a given value → `select(chain, "\n", needle)`
+- **(b) count** posts per user → `concat` of one `tally(chain, "\n", "] user: ")` per user, the result table composed inside the instruction
+- **(c) N newest** posts → `last(chain, "\n", N)`
+
+Every condition — needle, delimiter, count — entered as a value, a
+comparison operand. Nothing filter/fold-shaped ever needed to fire a
+sub-instruction; the eval boundary was never approached. **No §6
+falsification event.**
+
+## The growth curve (measurement 1, updated)
+
+| after | library | grammar | total |
+|---|---|---|---|
+| phase 1 | 2 (1 pure + 1 terminal) | 4 | 6 |
+| phase 2 | 5 (4 pure + 1 terminal) | 4 | **9** |
+
+Growth was +3, exactly one structure per query shape (filter, fold,
+positional take), all pure. The ~10-structure reporting threshold was
+not crossed, though 9 is close enough to note: each genuinely new
+*computation shape* seems to cost one structure. The counter-observation
+is that all three took the same operand form (value, delimiter,
+condition) and composed with the existing library on first contact — the
+`count` result table is plain `concat` over `tally` outputs.
+
+## Repetition (measurement 2, updated)
+
+Full demo including phase 2: **62 instruction firings, 7 distinct
+composition shapes**, 305 grammar-node evaluations. New shapes:
+`C3(D,L,L)` (find, ×2), `C5(D,L,L)` (newest), and the one-firing
+per-user table `C1(L,C4(D,L,L),L, ×3 users)`. Message-file firings rose
+from 6 to 24 — the per-user count re-demands the chain once per tally,
+because the grammar is a tree with no way to bind a value once
+(FRICTION.md #13).
+
+## Stored-form overhead (measurement 3, unchanged)
+
+Queries left the world byte-identical: 338 stored bytes, 18.0% grammar
+overhead, exactly as after phase 1. A query is an instruction that
+borrows the chain's firing and vanishes — no index, no cache, no
+materialized view came into existence.
+
+## Friction (measurement 4)
+
+Six new entries, FRICTION.md #8–#13. The central finding (#8): the
+stored chain fires to one thing only — the rendered thread — so queries
+compute over the render and inherit its convention (spoofable markers,
+#9). The model never needed a parser, but field-precise querying would
+require a different *stored* chain shape, not more query machinery.
+Secondary findings: open-key grouping would need a resident parser
+(refused, demander supplies the keys, #10); computation forced a shared
+number convention, decimal ASCII (#11); and the tree-not-DAG cost above
+(#13).
+
+## §6 verdict after phase 2
+
+The claim still stands, with its first real price tags visible. The
+library grew linearly with new computation shapes (not with data, users,
+or queries run), conditions-as-values held everywhere, and querying
+added zero resident or resting state. The pressure that phase 2 exposes
+for a phase 3 is: field-precise access (stored-shape evolution),
+open-key grouping, and whether shape-per-computation growth flattens
+into reuse as workloads accumulate — the §6 bet is that it does.
+
 ## Reproducing
 
 ```
-python3 demo.py     # runs router + two clients, restart, assertions
+python3 demo.py     # board + restart + refusals + the three queries
 python3 report.py   # regenerates measurements 2 and 3 from the run
 ```

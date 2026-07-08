@@ -5,8 +5,9 @@
 2. `build-brief.md` — process, build order, measurements, hard rules.
 
 ## Current state
-- Prototype built and measured (2026-07-08); spec unchanged. Grammar + runtime in `am/` (byte-walking instruction grammar, 2-structure library, single router, client), message-board workload as instructions, end-to-end demo with restart survival (`demo.py`), measurements (`report.py`, `REPORT.md`).
-- `LIBRARY.md` is the structure log (primary experimental output). `FRICTION.md` holds where the model fought back. `DECISIONS.md` holds judgment calls made under the brief's delegation plus open structural questions awaiting Jocke — its §2.1 (atomic posting) is open and nothing for it was implemented.
+- Phase 1 (message board) built, measured, and **accepted by Jocke as-is** (2026-07-08); spec unchanged. Grammar + runtime in `am/` (byte-walking instruction grammar, single router, client), workload as instructions, end-to-end demo with restart survival (`demo.py`), measurements (`report.py`, `REPORT.md`).
+- Phase 2 (computation pressure: find/count/newest queries over phase-1 data) built and measured same day. Library grew 2 → 5 structures (`select`, `tally`, `last` — all pure, conditions as values); grammar unchanged at 4 nodes. No falsification event; growth curve in `REPORT.md`.
+- `LIBRARY.md` is the structure log (primary experimental output). `FRICTION.md` holds where the model fought back (#8 is phase 2's central finding). `DECISIONS.md` §2.1 (atomic posting) is **ruled closed-as-open by Jocke**: the lost-update window is an accepted trade of literal references — do not fix or reopen.
 
 ## Rules that apply before you've read anything else
 - Never let a second representation of anything come into existence (spec §0).

@@ -44,11 +44,36 @@ mechanics, like a function return.
 exist only to produce the brief's measurements. Nothing in the model
 reads them; deleting them changes no behavior.
 
+### 1.6 (Phase 2) Queries compute over the rendered chain output
+The stored chain fires to one thing — the rendered thread — so the three
+queries are filter/fold/take structures over that in-flight value, with
+the record convention (line terminator, "] user: " marker) entering each
+query instruction as literal operands from the demander. The library
+holds no convention. *Basis:* the phase-2 rules fix conditions-as-values;
+the alternative (field-precise queries) would change the stored shape,
+which phase 2 froze ("over the existing board data"). Consequences
+logged as FRICTION.md #8–#9.
+
+### 1.7 (Phase 2) "Per user" keys come from the demander
+`count` fires one `tally` per user named by the client. Open-key
+grouping was refused — it needs key-extraction machinery, i.e. a
+resident parser (FRICTION.md #10, LIBRARY.md not-added list).
+
+### 1.8 (Phase 2) Structure-definition details pinned in the library
+Segment semantics (delimiter is a terminator; FRICTION.md #12) and the
+number convention (decimal ASCII for `tally` output and `last` input;
+FRICTION.md #11) are definition details of the new structures, decided
+as engineering the way varints were in 1.3.
+
 ---
 
 ## 2. Open structural questions for Jocke (NOT implemented)
 
 ### 2.1 Should posting be closable into one firing?
+
+**RULED by Jocke, 2026-07-08: stays open by design.** The lost-update
+window is an accepted trade of literal references. Do not fix, do not
+reopen. Options below kept for the record only.
 
 Today a post is two firings (demand head → fire message+head emits), so
 two concurrent posters can orphan a message (FRICTION.md #2). The plain

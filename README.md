@@ -11,7 +11,7 @@ needs (spec §6).
 | path | what |
 |---|---|
 | `am/instruction.py` | the grammar: one encoder, byte-walking `fire()` — the only form anything has |
-| `am/structures.py` | the library (2 structures; log in `LIBRARY.md`) |
+| `am/structures.py` | the library (5 structures; log in `LIBRARY.md`) |
 | `am/router.py` | one event loop: receive → resolve → fire whole → return |
 | `am/client.py` | the world side: builds instructions, displays outputs |
 | `demo.py` / `report.py` | end-to-end run and measurements |
@@ -31,6 +31,9 @@ python3 -m am.router &          # world/ is created next to it
 python3 -m am.client new-thread general
 python3 -m am.client post general alice "hello"
 python3 -m am.client read general
+python3 -m am.client find general "hello"     # posts containing a value
+python3 -m am.client count general alice bob  # posts per (named) user
+python3 -m am.client newest general 2         # N newest posts
 ```
 
 Python 3.8+, stdlib only.

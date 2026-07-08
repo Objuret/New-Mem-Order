@@ -33,7 +33,7 @@ import sys
 import time
 
 from .instruction import Incomplete, comp, demand, lit, outcome, skip
-from .structures import CONCAT, EMIT_DISK
+from .structures import CONCAT, EMIT_DISK, LAST, SELECT, TALLY
 
 HOST = os.environ.get("AM_HOST", "127.0.0.1")
 PORT = int(os.environ.get("AM_PORT", "7799"))
@@ -111,9 +111,49 @@ def read(thread):
     return call(demand(ref.decode()))
 
 
+# Phase-2 queries. Each is one instruction over the demanded chain; every
+# filter/fold condition is a VALUE (the needle, the delimiter, the count),
+# never a sub-instruction. The record convention -- lines terminated by
+# "\n", a post by user marked "] user: " -- belongs to the world (this
+# client asked for that rendering when it posted), so it enters the
+# instruction as literal operands, and stays out of the library.
+
+def find(thread, needle):
+    kind, ref = call(demand(head_ref(thread)))
+    if kind == "error":
+        return kind, ref
+    return call(comp(SELECT, demand(ref.decode()), lit("\n"), lit(needle)))
+
+
+def count(thread, users):
+    kind, ref = call(demand(head_ref(thread)))
+    if kind == "error":
+        return kind, ref
+    # The per-user table is composed inside the instruction: one tally per
+    # user the demander knows about (the world holds the user set; see
+    # FRICTION.md #10). Each tally demands the chain again -- the grammar
+    # is a tree with no way to bind a value once (FRICTION.md #13).
+    rows = []
+    for user in users:
+        rows.append(lit(user + ": "))
+        rows.append(comp(TALLY, demand(ref.decode()), lit("\n"),
+                         lit("] " + user + ": ")))
+        rows.append(lit("\n"))
+    return call(comp(CONCAT, *rows))
+
+
+def newest(thread, n):
+    kind, ref = call(demand(head_ref(thread)))
+    if kind == "error":
+        return kind, ref
+    return call(comp(LAST, demand(ref.decode()), lit("\n"), lit(n)))
+
+
 def main():
     argv = sys.argv[1:]
-    usage = "usage: client.py new-thread NAME | post THREAD USER TEXT | read THREAD"
+    usage = ("usage: client.py new-thread NAME | post THREAD USER TEXT | "
+             "read THREAD | find THREAD TEXT | count THREAD USER... | "
+             "newest THREAD N")
     if not argv:
         print(usage, file=sys.stderr)
         return 2
@@ -126,6 +166,15 @@ def main():
         ok_msg = "posted " + (value.decode() if kind == "value" else "")
     elif cmd == "read" and len(args) == 1:
         kind, value = read(args[0])
+        ok_msg = None
+    elif cmd == "find" and len(args) == 2:
+        kind, value = find(*args)
+        ok_msg = None
+    elif cmd == "count" and len(args) >= 2:
+        kind, value = count(args[0], args[1:])
+        ok_msg = None
+    elif cmd == "newest" and len(args) == 2:
+        kind, value = newest(*args)
         ok_msg = None
     else:
         print(usage, file=sys.stderr)

@@ -20,6 +20,9 @@ from .instruction import Refusal
 
 CONCAT = 1
 EMIT_DISK = 2
+SELECT = 3
+TALLY = 4
+LAST = 5
 
 
 def resolve_ref(world_root, ref):
@@ -42,6 +45,53 @@ def _concat(values):
     return b"".join(values)
 
 
+# Phase-2 structures: computation over a value, with every condition a
+# comparison operand (a value), never a sub-instruction that gets fired.
+# The record convention (what delimits a segment, what marks a user) is
+# NOT resident here -- it arrives as values from the demander, who owns
+# the rendering it is querying.
+
+def _segments(haystack, delim):
+    # A delimiter is a terminator, not a separator: "a\nb\n" is two
+    # segments. Pinned once, deterministically (FRICTION.md #12).
+    if not delim:
+        raise Refusal(b"empty delimiter")
+    parts = haystack.split(delim)
+    if parts and parts[-1] == b"":
+        parts.pop()
+    return parts
+
+
+def _select(values):
+    if len(values) != 3:
+        raise Refusal(b"select takes (value, delimiter, needle)")
+    hay, delim, needle = values
+    return b"".join(p + delim for p in _segments(hay, delim) if needle in p)
+
+
+def _tally(values):
+    if len(values) != 3:
+        raise Refusal(b"tally takes (value, delimiter, needle)")
+    hay, delim, needle = values
+    n = sum(1 for p in _segments(hay, delim) if needle in p)
+    # Values are bytes; counts leave as decimal ASCII -- the library's
+    # one shared number convention (FRICTION.md #11).
+    return b"%d" % n
+
+
+def _last(values):
+    if len(values) != 3:
+        raise Refusal(b"last takes (value, delimiter, count)")
+    hay, delim, n = values
+    if not n.isdigit():
+        raise Refusal(b"last: count must be decimal digits, got " + n)
+    k = int(n)
+    parts = _segments(hay, delim)
+    if k == 0:
+        return b""
+    return b"".join(p + delim for p in parts[-k:])
+
+
 def make_registry(world_root):
     world_root = os.path.realpath(world_root)
 
@@ -61,6 +111,9 @@ def make_registry(world_root):
         return ref
 
     return MappingProxyType({
-        CONCAT: _concat,      # pure
+        CONCAT: _concat,        # pure
         EMIT_DISK: _emit_disk,  # TERMINAL
+        SELECT: _select,        # pure
+        TALLY: _tally,          # pure
+        LAST: _last,            # pure
     })

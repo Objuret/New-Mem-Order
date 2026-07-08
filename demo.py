@@ -74,15 +74,35 @@ def main():
     router = start_router()
     try:
         after = client("read", "general")
+
+        assert before == after, ("thread changed across restart:\n%s\n%s"
+                                 % (before, after))
+        for expected in ("hello bob", "hi alice", "survives a restart",
+                         "=== thread general ==="):
+            assert expected in after, "missing %r in thread" % expected
+        print("restart survival: OK (thread identical, state carried only by files)")
+
+        # Phase 2: the three queries, over the phase-1 data that survived
+        # the restart. Conditions are values inside the instructions.
+        found = client("find", "general", "restart")
+        assert found.count("\n") == 1 and "survives a restart" in found, found
+        empty = client("find", "general", "no such text anywhere")
+        assert empty == "", repr(empty)
+        print("find: OK\n" + found)
+
+        counts = client("count", "general", "alice", "bob", "eve")
+        assert counts == "alice: 2\nbob: 1\neve: 0\n", repr(counts)
+        print("count: OK\n" + counts)
+
+        newest = client("newest", "general", "2")
+        lines = newest.splitlines()
+        assert len(lines) == 2, newest
+        assert "hi alice" in lines[0] and "survives a restart" in lines[1], newest
+        print("newest 2: OK\n" + newest)
     finally:
         router.send_signal(signal.SIGTERM)
         router.wait()
 
-    assert before == after, "thread changed across restart:\n%s\n%s" % (before, after)
-    for expected in ("hello bob", "hi alice", "survives a restart",
-                     "=== thread general ==="):
-        assert expected in after, "missing %r in thread" % expected
-    print("restart survival: OK (thread identical, state carried only by files)")
     print("PASS")
 
 

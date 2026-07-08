@@ -82,7 +82,7 @@ pagination would be a different chain shape, not a smarter reader.
 **Verdict: engineering note, plus a real observation:** the chain shape
 couples "read the thread" to "fire all of it."
 
-## 7. What produced zero friction (worth recording)
+## 7. What produced zero friction in phase 1 (worth recording)
 
 - Wire format == file format == executable form held with no converters
   anywhere. The encoder in `am/instruction.py` is the only constructor.
@@ -97,3 +97,92 @@ couples "read the thread" to "fire all of it."
 - Malformed input genuinely had nothing to exist for: the only failure
   modes on the wire are truncation (wait for more bytes) and a bad tag
   (refuse the stream) — there is no "parse error" repertoire.
+
+---
+
+# Phase 2 — computation pressure (2026-07-08)
+
+## 8. Queries run over the rendered value, not the stored fields
+
+A stored message holds its fields as distinct literals, but its only
+firing renders them into one value; an instruction's executable form is
+single-purpose, and there is no second way to fire the same bytes.
+Queries therefore compute over the in-flight rendered thread and depend
+on its rendering convention (line-terminated records, "] user: "
+markers) — a de-facto format inside a value. Two mitigations kept this
+inside the model: the convention enters query instructions as VALUES
+supplied by the demander (who asked for that rendering when it posted),
+so the library stays convention-free; and the rendered form exists only
+in flight (A2) — it is regenerated per query from the single stored
+representation, so no second representation ever rests anywhere.
+
+**Verdict: honest model edge, and the phase's central finding.** The
+model did not need a parser, but it paid for that by querying through
+the render. A workload wanting field-precise queries would push toward a
+different *stored* chain shape (fields demandable separately), not
+toward query machinery.
+
+## 9. Rendered-form queries are spoofable
+
+Because conditions match patterns inside the rendered value, a post
+whose text contains "] alice: " inflates alice's tally and pollutes
+find results. The fields were distinct at rest; the conflation happens
+in the executable form (consequence of #8).
+
+**Verdict: model edge consequence.** Today's equivalent is grepping a
+log; the model reproduced that ceiling exactly.
+
+## 10. "Per user" required the world to hold the user set
+
+`tally` counts one needle per firing. Grouping by an unknown key set
+would need key-extraction between format markers — a resident parser,
+and the library ballooning §6 warns about. Refused: the demander
+supplies the users it asks about, the same burden as holding references
+(spec §7).
+
+**Verdict: honest model edge.** Enumerable-key workloads fit; open-key
+grouping is future falsification pressure.
+
+## 11. Numbers needed a byte form
+
+`tally` emits and `last` consumes decimal ASCII. Values are bytes; the
+moment computation produced a count, the library needed a shared number
+rendering — the smallest possible type convention crept in as content.
+
+**Verdict: unavoidable under A2; logged because it is convention shared
+by structures**, which is exactly the kind of thing that must stay
+counted (it is capability the receiver must already hold).
+
+## 12. Segment semantics had to be pinned
+
+"Delimiter is a terminator, not a separator" (trailing "\n" does not
+create an empty segment). Deterministic, but an arbitrary choice made in
+the library rather than by the workload.
+
+**Verdict: engineering wrinkle** — the price of delimiter-as-value.
+
+## 13. The grammar is a tree, not a DAG
+
+The per-user count fires one `tally` per user, and each tally must
+demand the chain again — there is no way to bind a demanded value once
+and wire it to several operands. Message-file firings went from 6
+(phase 1 demo) to 24 (with queries) mostly from this. Purity makes the
+re-firing harmless and cacheable-by-identity (spec §4), but the
+instruction cannot express the sharing.
+
+**Verdict: honest model edge.** A let/bind grammar node would be a spec
+amendment; at prototype scale it is a non-problem (speed is out of
+scope), so it is recorded here rather than raised as a decision.
+
+## 14. What produced zero friction in phase 2
+
+- No filter or fold ever needed its condition to be a fired
+  sub-instruction; needles, delimiters, and counts all rode as values.
+  The eval/apply boundary was never even approached — no §6
+  falsification event.
+- Queries leave zero residue: nothing was stored, no index appeared, no
+  cache had to be managed. A query is an instruction that borrows the
+  chain's firing and vanishes.
+- The three new structures composed with everything existing on first
+  contact: `count`'s result table is `concat` over `tally` outputs with
+  literal row labels — no glue machinery.
