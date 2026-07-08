@@ -186,3 +186,88 @@ scope), so it is recorded here rather than raised as a decision.
 - The three new structures composed with everything existing on first
   contact: `count`'s result table is `concat` over `tally` outputs with
   literal row labels — no glue machinery.
+
+---
+
+# Phase 3 — the layer (2026-07-08)
+
+## 15. Writes cannot reuse the previous version's chunks
+
+Every write re-stores the file's whole content as fresh chunk files.
+The chunk references live only inside the stored chain, which the live
+layer may not parse (reading stored bytes structurally would be a
+second interpretation of the executable form); carrying the chunk list
+anywhere else — in the head, in memory across operations — would be a
+second representation of the chain. So the layer renders, splices, and
+re-stores. Measured cost: the backing store grew to 268.9 MB for an
+11.0 MB logical tree (24×), almost all of it superseded chains left
+unreachable by append+swap (reclamation is banned this phase).
+
+**Verdict: honest model edge, the phase's central cost finding.** The
+same literal-reference opacity that made phase-2 queries run over the
+render makes version-to-version sharing unreachable for the live layer.
+(The offline pass, which IS chartered to walk chains, has no such
+limit — one plausible future shape is condensation doubling as history
+compaction.)
+
+## 16. Fixed chunk boundaries visibly hurt dedup — charter caveat confirmed
+
+80 occurrences of admitted blocks were unreplaceable because they span
+the fixed 64 KiB chunk boundaries (the 5 MiB text file's repeated block
+lands across every boundary). The charter pre-ruled fixed boundaries
+for v1 and asked for exactly this note.
+
+## 17. Faked syscalls (charter §6 requires the list)
+
+- `chown`: accepted and ignored.
+- hardlinks (`link`): EPERM — a hardlink is two references to one head
+  with shared identity, which the reference-tree cannot express.
+- `atime`/`ctime`: reported as mtime; only mtime is stored.
+- `fsync`/`flush`: no-ops — every write is already at rest when its
+  firing returns; there is nothing pending to flush, ever.
+- directory metadata (mode/mtime of directories): taken from the
+  backing directories, not modeled.
+- non-UTF-8 filenames: refused (references decode as UTF-8).
+
+## 18. Reads render the whole chain, per syscall
+
+The kernel reads big files in ≤128 KiB bites; each bite demands the
+head and fires the entire chain, then slices. Measured: 32.3 firings
+per read call over the acceptance workload (an 81-file chain fired ~40
+times to read one 5 MiB file once). No caching is pre-ruled for v1 —
+the number IS the measurement, and the spec's identity-cache (unbuilt)
+is exactly what it argues for.
+
+## 19. Metadata needed a record convention — phase-2 finding #8 recurs
+
+The head carries five "\n"-terminated literal fields (type, chain ref,
+size, mtime, mode). The layer owns the convention it renders and
+splits, as the phase-2 clients did. Same verdict: convention lives in
+the world; the library and grammar stay convention-free.
+
+## 20. Idempotency forced the pass to preserve chunk topology
+
+First attempt regrouped pieces into fresh 64 KiB chunks on rewrite;
+that MOVED the fixed boundaries, so blocks that were span-rejected on
+run 1 became replaceable on run 2 — run 2 rewrote chains, violating the
+charter's idempotency rule. The fix: rewrites keep every container's
+boundary where it was, re-emitting only touched chunk files and reusing
+untouched references in the new chain. Boundary stability, not
+content stability, is what makes re-running a no-op.
+
+## 21. What produced zero friction in phase 3
+
+- **git ran unmodified** — init, add, three commits, log, checkout,
+  fsck, index renames, lock files, reflog appends — on a filesystem
+  whose every file is a firing pattern. No syscall behavior had to be
+  bent for it (only faked metadata, #17).
+- **Crash consistency cost zero code.** Emits inside a write fire
+  left-to-right with the head last, inside one indivisible firing;
+  SIGKILL + remount needed no recovery, no journal, no fsck of ours —
+  acceptance 3 passed with literally no code path for it.
+- **No locks under a real kernel's concurrency.** One loop, firings
+  never yield; the kernel's interleaved syscalls serialize at the
+  mount, exactly the charter's §5 prediction.
+- **Condensation verification is trivial** because rendering is
+  deterministic: checksum before, rewrite, render, compare — no "did
+  the optimizer change semantics" class of doubt.

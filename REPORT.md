@@ -169,9 +169,120 @@ for a phase 3 is: field-precise access (stored-shape evolution),
 open-key grouping, and whether shape-per-computation growth flattens
 into reuse as workloads accumulate — the §6 bet is that it does.
 
+---
+
+# Phase 3 — the layer (2026-07-08)
+
+Per PHASE3-LAYER.md: the runtime became a transparent FUSE filesystem —
+unmodified programs above, instruction chains below, reading fires the
+chain. **FUSE mounted for real in this environment** (no §3 fallback):
+all four acceptance tests ran against a genuine kernel mount, and
+acceptance 2 is real git, unmodified. Raw numbers: `phase3-results.json`
+(committed); reproduce with `python3 phase3_tests.py`.
+
+## Acceptance (§10) — all four pass, in order
+
+1. **Byte fidelity**: sizes 0 / 1 / 4095 / 4096 / 4097 / 200 KiB / 5 MiB
+   (random and text), range overwrites on and across 64 KiB chunk
+   boundaries, extension past EOF, truncate shorter and longer, rename,
+   delete, recreate, symlinks — byte-identical throughout.
+2. **Real git**: init, add, 3 commits with edits/additions/deletions,
+   log, checkout of the first commit (content verified against v1) and
+   back, `git fsck --strict` clean. Lock files, index renames, and
+   reflog appends all behaved.
+3. **Restart survival**: mount process SIGKILLed, remounted; all 126
+   paths byte-identical, git log and fsck clean. **Zero recovery code
+   exists.** Crash consistency is structural: a write's emits fire
+   left-to-right inside one indivisible firing with the head last, so an
+   interrupted write leaves the old head naming the old complete chain.
+4. **Condensation fidelity**: full-tree checksums identical through a
+   fresh mount after the pass; a second pass rewrote nothing
+   (idempotent).
+
+## Measurement 1 — backing store vs plain ext4
+
+| | bytes |
+|---|---|
+| logical tree on plain ext4 (mirror, raw) | 10,996,255 |
+| store, **reachable**, before condensation | 11,012,495 (+0.15%) |
+| store, **reachable**, after condensation | **5,682,464 (−48.3% vs ext4)** |
+| store, total incl. superseded chains | 268,891,322 (24.5×) |
+
+Two honest numbers, reported separately. Reachable: the stored form
+costs 0.15% over raw before condensation and **half of ext4 after** —
+references replacing repeated content, no codec anywhere. Total: 24.5×,
+because every write re-stores whole content and nothing is reclaimed
+(charter: space is a measurement) — see FRICTION.md #15 for why the
+live layer cannot reuse a previous version's chunks (literal-reference
+opacity), the phase's central cost finding.
+
+## Measurement 2 — dedup evidence
+
+Admission log in LIBRARY.md. Five templates admitted: a 546 B text
+block recurring 9,801 times across 5 files (5.35 MB saved), the shared
+license header as two blocks (1068 B + 631 B × 30 source files each),
+one more text block, and the docs boilerplate (663 B × 3). Zero
+two-file rejections; **80 occurrences span-rejected on fixed 64 KiB
+boundaries** — the charter's fixed-boundary caveat, confirmed and
+logged (FRICTION.md #16).
+
+## Measurement 3 — the headline growth curve
+
+**2 (phase 1) → 5 (phase 2) → 10 (phase 3)**, grammar constant at 4.
+
+The ~10-structure reporting threshold is hit exactly — a finding, per
+charter. Its texture matters: the 5 new structures are data-derived
+content templates, store-local rather than universal, discovered by the
+pass rather than designed. The library now has two tiers — 5 universal
+computational structures + N-per-store promoted templates — and the §6
+question refines to: does the UNIVERSAL tier stay flat while the
+store-local tier tracks content? This phase's answer: the universal
+tier needed zero additions to host a filesystem and run git.
+
+## Measurement 4 — firings per syscall (acceptance workload)
+
+| op | calls | firings/call | | op | calls | firings/call |
+|---|---|---|---|---|---|---|
+| getattr | 13,745 | 0.68 | | truncate | 4 | 5.50 |
+| read | 807 | 32.27 | | utimens | 9 | 3.00 |
+| write | 288 | 17.48 | | readlink | 3 | 4.00 |
+| create | 172 | 1.00 | | readdir | 159 | **0** |
+| rename | 74 | **0** | | unlink/mkdir/rmdir | 102 | **0** |
+
+Namespace operations fire nothing — they are reference management in
+the world. getattr is one head firing (0 for directories); the stored
+rendered-size metadata did its job (stat never renders). read's 32.3 is
+the no-caching price: every ≤128 KiB kernel read fires the whole chain
+(FRICTION.md #18) — the raw model, as the charter wanted measured.
+
+## Measurement 5 — friction
+
+FRICTION.md #15–#21. Central: write amplification from literal-ref
+opacity (#15); boundary span-rejections (#16); the faked-syscall list
+(#17); whole-chain renders per read (#18); the head's record convention
+as phase-2's #8 recurring at the metadata level (#19); idempotency
+forcing boundary-stable rewrites (#20). And the zero-friction list
+(#21) is the phase's quiet headline: unmodified git on a firing-pattern
+filesystem, crash consistency with no code, no locks under a real
+kernel's concurrency, and an optimizer whose correctness check is one
+checksum comparison because rendering is deterministic.
+
+## Verdict after phase 3
+
+The claim survived contact with real software. Universal structures:
+still 5 — a filesystem and git needed none added. Condensation on real
+content beat ext4 by 2× on reachable bytes with a 5-template library.
+The honest debits are operational, and both were pre-priced by the
+charter: unreclaimed history at 24.5×, and render-per-read at 32
+firings/syscall — the first is what condensation-as-compaction and the
+licensed-but-unbuilt identity cache exist to answer, in some later
+phase, if Jocke rules them in.
+
 ## Reproducing
 
 ```
-python3 demo.py     # board + restart + refusals + the three queries
-python3 report.py   # regenerates measurements 2 and 3 from the run
+python3 demo.py           # phases 1-2: board + queries
+python3 report.py         # phase 1-2 measurements from the run
+python3 phase3_tests.py   # phase 3: mounts FUSE, runs all four
+                          # acceptance tests, writes phase3-results.json
 ```

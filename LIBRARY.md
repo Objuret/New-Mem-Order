@@ -34,10 +34,19 @@ into the grammar must not shrink the headline number.
 |---|---|---|---|
 | phase 1 (message board) | 2 (1 pure + 1 terminal) | 4 | 6 |
 | phase 2 (computation pressure) | 5 (4 pure + 1 terminal) | 4 | **9** |
+| phase 3 (the layer, real content) | 10 (5 code + 5 promoted templates) | 4 | **14** |
 
 Phase 2 grew the library by exactly the three query shapes (filter, fold,
-positional take), all pure, all with conditions as values. The ~10
-falsification threshold was not crossed. No grammar node was added.
+positional take), all pure, all with conditions as values. No grammar
+node was added in any phase.
+
+Phase 3 grew it by 5 promoted content templates (admission log below):
+zero-operand pure structures whose definitions are unsent literal
+instructions under `store/lib/<sid>`, loaded resident at mount. **The
+library hit the charter's ~10 reporting threshold exactly** — reported
+as a finding, not a failure, in REPORT.md, together with the observation
+that promoted templates are store-local (data-derived), not universal:
+the count now has two tiers, 5 universal + N-per-store.
 
 ## Structures considered and NOT added
 
@@ -56,3 +65,15 @@ falsification threshold was not crossed. No grammar node was added.
   user set instead (FRICTION.md #10).
 - `count-lines`: `tally` with the needle every segment contains would
   cover it; never separately forced.
+
+### Condensation pass admissions (2026-07-08)
+
+| sid | block bytes | files | hits | bytes saved | example files |
+|---|---|---|---|---|---|
+| 100 | 546 | 5 | 9801 | 5350800 | fidelity/text-204800, fidelity/text-4095, fidelity/text-4096, fidelity/text-4097 |
+| 101 | 1068 | 30 | 30 | 30972 | repo/src/mod_00.py, repo/src/mod_01.py, repo/src/mod_02.py, repo/src/mod_03.py |
+| 102 | 631 | 30 | 30 | 18299 | repo/src/mod_00.py, repo/src/mod_01.py, repo/src/mod_02.py, repo/src/mod_03.py |
+| 103 | 523 | 5 | 5 | 2092 | fidelity/text-204800, fidelity/text-4095, fidelity/text-4096, fidelity/text-4097 |
+| 104 | 663 | 3 | 3 | 1326 | repo/CONTRIBUTING.md, repo/README.md, repo/docs/guide.md |
+
+Rejected: 0 recurring blocks seen in only 2 files; 80 admitted-block occurrences unreplaceable because they span stored chunk boundaries (fixed 64 KiB boundaries -- charter's noted caveat).

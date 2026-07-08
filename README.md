@@ -11,10 +11,12 @@ needs (spec §6).
 | path | what |
 |---|---|
 | `am/instruction.py` | the grammar: one encoder, byte-walking `fire()` — the only form anything has |
-| `am/structures.py` | the library (5 structures; log in `LIBRARY.md`) |
+| `am/structures.py` | the library (5 universal structures; log in `LIBRARY.md`) |
 | `am/router.py` | one event loop: receive → resolve → fire whole → return |
 | `am/client.py` | the world side: builds instructions, displays outputs |
-| `demo.py` / `report.py` | end-to-end run and measurements |
+| `am/layer.py` / `am/fuse.py` | phase 3: the FUSE layer — files as chains, reading fires |
+| `am/condense.py` | phase 3: offline condensation pass (promotes recurring content) |
+| `demo.py` / `report.py` / `phase3_tests.py` | end-to-end runs and measurements |
 | `LIBRARY.md` | structure log — primary experimental output |
 | `FRICTION.md` | where the model fought back |
 | `DECISIONS.md` | judgment calls + open questions for Jocke |
@@ -34,6 +36,11 @@ python3 -m am.client read general
 python3 -m am.client find general "hello"     # posts containing a value
 python3 -m am.client count general alice bob  # posts per (named) user
 python3 -m am.client newest general 2         # N newest posts
+
+# phase 3 — the layer (needs FUSE; see PHASE3-STATE.md for env recipe):
+python3 phase3_tests.py                       # all four acceptance tests
+python3 -m am.fuse MOUNTPOINT --store store   # mount by hand
+python3 -m am.condense --store store          # offline condensation pass
 ```
 
 Python 3.8+, stdlib only.

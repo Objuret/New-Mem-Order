@@ -2,3 +2,5 @@ world/
 stats.log
 __pycache__/
 *.pyc
+phase3/
+phase3-results.json.tmp

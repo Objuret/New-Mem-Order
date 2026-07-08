@@ -65,6 +65,30 @@ number convention (decimal ASCII for `tally` output and `last` input;
 FRICTION.md #11) are definition details of the new structures, decided
 as engineering the way varints were in 1.3.
 
+### 1.9 (Phase 3) The head's five-field record
+A file's head renders five "\n"-terminated literal fields (type, chain
+ref, size, mtime_ns, mode). *Basis:* charter §4/§6 pre-rule what the
+head holds; the record convention is the layer's own, entering and
+leaving as values (the phase-2 pattern, ruling 1.6). Numbers ride as
+decimal ASCII per ruling 1.8.
+
+### 1.10 (Phase 3) Promoted structures persist as unsent instructions
+A condensation admission is a zero-operand content template whose
+definition lives at `store/lib/<sid>` as a literal instruction, fired
+once at mount and resident thereafter. *Basis:* charter §7 pre-rules
+admission; A1 requires runtime immutability, satisfied because growth
+happens only in the offline pass; storing the definition as an
+instruction keeps "never store raw bytes outside literal nodes" (§4)
+and adds no second representation. Listing `store/lib/` at mount is the
+same act as readdir over a directory of references (§4's sanctioned
+mechanism), not an index.
+
+### 1.11 (Phase 3) Rewrites preserve chunk topology
+The pass re-emits only touched containers and reuses untouched chunk
+references. *Basis:* charter §7 requires idempotent re-runs; moving the
+fixed boundaries during rewrite breaks that (FRICTION.md #20).
+Engineering detail of the pass, same class as 1.3.
+
 ---
 
 ## 2. Open structural questions for Jocke (NOT implemented)

@@ -1,0 +1,160 @@
+{
+ "opstats": {
+  "getattr": [
+   13745,
+   9398
+  ],
+  "mkdir": [
+   66,
+   0
+  ],
+  "create": [
+   172,
+   172
+  ],
+  "write": [
+   288,
+   5034
+  ],
+  "read": [
+   807,
+   26041
+  ],
+  "truncate": [
+   4,
+   22
+  ],
+  "rename": [
+   74,
+   0
+  ],
+  "unlink": [
+   34,
+   0
+  ],
+  "symlink": [
+   2,
+   2
+  ],
+  "readlink": [
+   3,
+   12
+  ],
+  "readdir": [
+   159,
+   0
+  ],
+  "chmod": [
+   5,
+   15
+  ],
+  "utimens": [
+   9,
+   27
+  ],
+  "rmdir": [
+   2,
+   0
+  ]
+ },
+ "store_before": {
+  "raw": 268757414,
+  "ext4_blocks": 287547392,
+  "files": 4690,
+  "reachable": 11012495
+ },
+ "mirror": {
+  "raw": 10996255,
+  "ext4_blocks": 11354112,
+  "files": 126
+ },
+ "condense": {
+  "files": 126,
+  "admitted": [
+   {
+    "size": 546,
+    "files": 5,
+    "hits": 9801,
+    "saved": 5350800,
+    "examples": [
+     "fidelity/text-204800",
+     "fidelity/text-4095",
+     "fidelity/text-4096",
+     "fidelity/text-4097"
+    ],
+    "sid": 100,
+    "fresh": true,
+    "replaced": 9721
+   },
+   {
+    "size": 1068,
+    "files": 30,
+    "hits": 30,
+    "saved": 30972,
+    "examples": [
+     "repo/src/mod_00.py",
+     "repo/src/mod_01.py",
+     "repo/src/mod_02.py",
+     "repo/src/mod_03.py"
+    ],
+    "sid": 101,
+    "fresh": true,
+    "replaced": 30
+   },
+   {
+    "size": 631,
+    "files": 30,
+    "hits": 30,
+    "saved": 18299,
+    "examples": [
+     "repo/src/mod_00.py",
+     "repo/src/mod_01.py",
+     "repo/src/mod_02.py",
+     "repo/src/mod_03.py"
+    ],
+    "sid": 102,
+    "fresh": true,
+    "replaced": 30
+   },
+   {
+    "size": 523,
+    "files": 5,
+    "hits": 5,
+    "saved": 2092,
+    "examples": [
+     "fidelity/text-204800",
+     "fidelity/text-4095",
+     "fidelity/text-4096",
+     "fidelity/text-4097"
+    ],
+    "sid": 103,
+    "fresh": true,
+    "replaced": 5
+   },
+   {
+    "size": 663,
+    "files": 3,
+    "hits": 3,
+    "saved": 1326,
+    "examples": [
+     "repo/CONTRIBUTING.md",
+     "repo/README.md",
+     "repo/docs/guide.md"
+    ],
+    "sid": 104,
+    "fresh": true,
+    "replaced": 3
+   }
+  ],
+  "rejected_2file": 0,
+  "span_rejections": 80,
+  "rewritten": 38,
+  "library_total": 10
+ },
+ "store_after": {
+  "raw": 268891322,
+  "ext4_blocks": 288088064,
+  "files": 4815,
+  "reachable": 5682464
+ }
+}
