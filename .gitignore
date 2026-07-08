@@ -1,0 +1,4 @@
+world/
+stats.log
+__pycache__/
+*.pyc
