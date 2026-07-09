@@ -42,7 +42,9 @@ BOILER = ("This paragraph is standard project boilerplate that appears "
 
 
 def mount(stats_out=None):
-    args = [sys.executable, "-m", "am.fuse", MNT, "--store", STORE]
+    # --raw: this harness measures the v1 model with no caching
+    # (PHASE3-LAYER.md section 8); phase 6 measures the cache separately
+    args = [sys.executable, "-m", "am.fuse", MNT, "--store", STORE, "--raw"]
     if stats_out:
         args += ["--stats-out", stats_out]
     p = subprocess.Popen(args, cwd=ROOT, stderr=subprocess.DEVNULL)

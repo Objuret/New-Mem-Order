@@ -1,0 +1,31 @@
+{
+ "store_before": {
+  "raw": 268891321,
+  "ext4_blocks": 288088064,
+  "files": 4815
+ },
+ "compact": {
+  "files": 126,
+  "removed": 4390,
+  "freed": 263208858
+ },
+ "store_after": {
+  "raw": 5682463,
+  "ext4_blocks": 7254016,
+  "files": 425
+ },
+ "raw": {
+  "elapsed": 4.39,
+  "read_calls": 495,
+  "read_firings": 15050,
+  "firings_per_read": 30.4,
+  "cache_hits": 0
+ },
+ "cached": {
+  "elapsed": 1.42,
+  "read_calls": 495,
+  "read_firings": 1404,
+  "firings_per_read": 2.84,
+  "cache_hits": 375
+ }
+}

@@ -364,3 +364,46 @@ needs a ruling, not an implementation.**
   post, two files) and in what never had to exist: schema, parser,
   version handshake. Scale is where shared residence should win;
   unmeasured until a bigger corpus.
+
+---
+
+# Phase 6 — compaction and the render cache (2026-07-09)
+
+## 28. The cache is a store, and the invisibility test is checkable
+
+The render cache is the first component in the project whose existence
+changes nothing but time — and that claim is not rhetoric, it is an
+assertion: the benchmark reads the whole tree raw and cached and
+compares checksums. It held. The discipline that made it checkable is
+determinism plus write-once references: a cached entry can never be
+wrong, only absent.
+
+**Verdict: the spec's cacheability story, confirmed in the world tier.**
+Note honestly: this is a demander-side memory, not the model's licensed
+below-demand identity cache — chains contain demands, so the soundness
+comes from the mount being the store's only writer (fresh reference per
+write), not from the spec's determinism clause alone.
+
+## 29. Heads are the floor
+
+Cached reads still cost 2.84 firings per read call — the head demand
+per operation. Heads are the one mutable indirection in the design, so
+they can never be cached, so every operation pays one firing to cross
+the mutable frontier. That is the durable price of identity-over-time
+in this model (the phase-1 finding, now as a floor constant).
+
+**Verdict: honest model edge, quantified.**
+
+## 30. What produced zero friction in phase 6
+
+- **GC needed no machinery.** Roots are the heads directory,
+  reachability is the demand graph already stored in the chains,
+  deletion is os.remove. 4,390 files and 263 MB of superseded history
+  vanished with zero refcounts, zero epochs, zero pauses that matter.
+- **Cache invalidation genuinely had nothing to do.** A write stores a
+  fresh chain reference, which is a natural cache miss; the overwrite
+  test passed against both the warm cache and a cold raw remount. The
+  spec's claim that invalidation is deleted was true here for the
+  boring reason: nothing a cache key names can ever change.
+- **The two passes compose.** Condense then compact leaves a store at
+  roughly half the plain-ext4 tree with zero unreachable bytes.

@@ -103,6 +103,27 @@ backing mtime — the readdir precedent (phase-3 §4). A change manifest
 was refused as the banned index (FRICTION.md #25). The driver's
 high-water mark is driver-side state, like rsync's.
 
+### 1.14 (Phase 6) Compaction = deletion by reachability
+`am/compact.py` removes chain files no head reaches. *Basis:* spec §4
+grants deletion of unsent instructions as a plain world act; the heads
+directory is already the root set; the reachability walk is the
+chartered offline structural walk (same class as condensation). No GC
+component exists — no refcounts, no roots registry, no pauses.
+Render-verified before/after inside the pass.
+
+### 1.15 (Phase 6) The layer's render cache is demander-side memory
+The mount memoizes chain renders by reference. *Basis:* a demander may
+remember outputs it received (phase-1 clients kept refs; nothing in the
+spec obliges re-demanding); serving that memory is sound HERE because
+the mount is the store's only writer and every write goes to a fresh
+chain reference, and the condensation pass is render-identity-verified
+across mounts. Heads are mutable and are never cached. This is NOT the
+spec's below-demand identity cache (chains contain demands); it leans
+on the write-once discipline, and it is stated so in FRICTION.md #28.
+`--raw` disables it; phase3_tests.py pins `--raw` so the v1 raw-model
+numbers remain the published baseline. Checkably invisible: the phase-6
+benchmark asserts raw and cached full-tree checksums are identical.
+
 ---
 
 ## 2. Open structural questions for Jocke (NOT implemented)

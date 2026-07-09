@@ -394,6 +394,48 @@ reading is the natural A4 move but touches A1 — recommendation written,
 NOT implemented, awaiting ruling.) §2.3: remote references — noted,
 never needed, undesigned.
 
+---
+
+# Phase 6 — compaction and the render cache (2026-07-09)
+
+Phase 3 deliberately measured the raw model and left its two costs
+standing: 24.5× store growth from superseded history, and 32 firings
+per read syscall from whole-chain renders. Phase 6 builds the two
+answers those findings pointed at and prices them on the phase-3 store.
+Reproduce: `python3 phase3_tests.py` then `python3 phase6.py`; numbers
+in `phase6-results.json`.
+
+## Compaction (`am/compact.py`)
+
+**268.9 MB → 5.7 MB** — 4,390 unreachable chain files deleted, 126 live
+files render-verified before and after. There is no GC machinery to
+describe: the heads directory is the root set, the demand graph inside
+the chains is the reachability structure, and deletion is `os.remove`.
+Combined with condensation, the store now rests at roughly **half** the
+plain-ext4 size of the same logical tree, with zero unreachable bytes.
+
+## The render cache (layer-side, `--raw` to disable)
+
+Same workload (full stat storm + reading every file, twice), raw vs
+cached, checksums asserted identical:
+
+| | read calls | firings | firings/read | wall time |
+|---|---|---|---|---|
+| raw (v1 baseline) | 495 | 15,050 | 30.4 | 4.39 s |
+| cached | 495 | 1,404 | **2.84** | **1.42 s** |
+
+The residual 2.84 is the head demand every operation pays — heads are
+the one mutable indirection, are never cached, and are therefore the
+model's cost floor for identity-over-time (FRICTION.md #29). Cache
+invalidation had literally nothing to do: a write stores a fresh chain
+reference, which is a natural miss; the overwrite test passes against
+the warm cache and a cold raw remount alike. The cache is honestly a
+demander-side memory, not the spec's below-demand identity cache — the
+distinction and its soundness argument are in DECISIONS.md 1.15.
+
+phase3_tests.py pins `--raw`, so every previously published number
+remains the raw model.
+
 ## Reproducing
 
 ```
@@ -402,4 +444,5 @@ python3 report.py         # phase 1-2 measurements from the run
 python3 phase3_tests.py   # phase 3: FUSE mount, four acceptance tests
 python3 phase4.py         # phase 4: ledger workload + shape condensation
 python3 phase5.py         # phase 5: two routers, replication, bootstrap
+python3 phase6.py         # phase 6: compaction + render cache pricing
 ```

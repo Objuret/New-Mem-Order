@@ -111,7 +111,8 @@ class LayerFS(Operations):
         if self.stats_out:   # instrumentation dump on clean unmount
             with open(self.stats_out, "w") as f:
                 json.dump({"opstats": self.layer.opstats,
-                           "promoted": len(self.layer.promoted)}, f)
+                           "promoted": len(self.layer.promoted),
+                           "cache_hits": self.layer.cache_hits}, f)
 
 
 def main():
@@ -119,8 +120,10 @@ def main():
     ap.add_argument("mountpoint")
     ap.add_argument("--store", default="store")
     ap.add_argument("--stats-out", default=None)
+    ap.add_argument("--raw", action="store_true",
+                    help="disable the render cache (the v1 raw model)")
     args = ap.parse_args()
-    layer = Layer(args.store)
+    layer = Layer(args.store, cache=not args.raw)
     print("layer: %d base + %d promoted structures resident"
           % (5, len(layer.promoted)), file=sys.stderr, flush=True)
     FUSE(LayerFS(layer, args.stats_out), args.mountpoint,

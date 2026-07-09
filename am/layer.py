@@ -89,7 +89,18 @@ def _const(block):
 
 
 class Layer:
-    def __init__(self, store_root):
+    def __init__(self, store_root, cache=True):
+        # The render cache is the demander's own memory of outputs it
+        # received — the model is not consulted and not changed; delete
+        # the cache and nothing differs but time (DECISIONS.md 1.15).
+        # Sound because this mount is the store's only writer and every
+        # write goes to a FRESH chain reference (append+swap), so a
+        # chain ref's render can never change while mounted; across
+        # mounts, the condensation pass is render-identity-verified.
+        # Heads are mutable and are never cached.
+        self._render_cache = {} if cache else None
+        self._cache_bytes = 0
+        self.cache_hits = 0
         self.root = os.path.realpath(store_root)
         os.makedirs(os.path.join(self.root, "fs"), exist_ok=True)
         os.makedirs(os.path.join(self.root, "chains"), exist_ok=True)
@@ -180,8 +191,20 @@ class Layer:
         emits.append(comp(EMIT_DISK, lit(self._ref(path)), lit(head)))
         self._fire(comp(CONCAT, *emits))
 
+    CACHE_CAP = 256 * 1024 * 1024
+
     def _render(self, chain_ref):
-        return self._fire(demand(chain_ref))
+        cache = self._render_cache
+        if cache is not None:
+            hit = cache.get(chain_ref)
+            if hit is not None:
+                self.cache_hits += 1
+                return hit
+        value = self._fire(demand(chain_ref))
+        if cache is not None and self._cache_bytes + len(value) <= self.CACHE_CAP:
+            cache[chain_ref] = value
+            self._cache_bytes += len(value)
+        return value
 
     # --- the API programs see ---
 

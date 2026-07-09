@@ -50,6 +50,10 @@ python3 -m am.shapemine --world world         # shape pass by hand
 # phase 5 — the wire (run phase4.py first):
 python3 phase5.py                             # two routers: replication,
                                               # dictionary bootstrap, deltas
+
+# phase 6 — compaction + render cache (run phase3_tests.py first):
+python3 phase6.py                             # reclaim history, price cache
+python3 -m am.compact --store phase3/store    # compaction by hand
 ```
 
 Python 3.8+, stdlib only.
