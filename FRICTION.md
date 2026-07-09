@@ -606,3 +606,37 @@ Recorded so the report never implies Python was 1000× off.
   is real.
 - **Templates-as-residence worked exactly as drawn**: 1,506 blocks
   loaded once at start, then every reference a memcpy from warm memory.
+
+---
+
+# Phase 12 — the tool (2026-07-09)
+
+## 44. Dogfood findings from am.tool
+
+- **The ≥3-file admission rule makes dedup warm up late**: snapshot 1
+  admits nothing, snapshot 2 admits only what already recurred within a
+  generation, and full cross-version dedup arrives with snapshot 3
+  (+874 templates at g3). A backup tool would want blocks shared by
+  just two snapshots to dedup too; the threshold was charter law for
+  the phase-3 experiment and is kept as-is pending a ruling. Cost: the
+  first two snapshots store closer to 2× than 1×.
+- **Deltas are chunk-grained, not edit-grained**: pushing one new
+  generation (6 edited files, 1 added) moved 0.16 MB — 7% of a full
+  snapshot, vs rsync's few kB. The remaining gap is #15/#37 wearing its
+  last costume: an edited file's changed chunk re-ships whole.
+- **The workflow answer to #37 held**: snap → condense → compact →
+  push means the wire carries condensed chains and references into
+  templates the replica already holds. No rule changes were needed.
+
+## 45. What produced zero friction in phase 12
+
+- The tool is ~250 lines of world-side CLI and contains no model
+  machinery at all — every capability (immutable snapshots, restore of
+  any version, verification, replication, delta transport, browsing
+  history as a filesystem) was already lying in the chartered parts,
+  waiting to be composed.
+- Snapshot immutability required no code: a snapshot is a namespace
+  nothing ever writes into again, because nothing is ever overwritten.
+- The replica needed no import, no schema, no format version: it is a
+  store like any other, and a CLI process loads residency at start, so
+  even the §2.2 restart question never surfaces in tool-shaped use.

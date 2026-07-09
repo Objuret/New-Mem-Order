@@ -572,6 +572,29 @@ never ran (phases 1–10), the added interpretation is nearly free
 (this phase), and the byte movement saved is 6.6× on recurring content
 (phase 10).
 
+---
+
+# Phase 12 — the tool (2026-07-09)
+
+The product turn: `am.tool`, a snapshot/replication CLI — the job
+phase 10 proved the model wins on merit. ~250 lines of world-side
+composition over chartered machinery; zero new structures, zero grammar
+or rule changes. Exercised end to end by `phase12.py`:
+
+- four snapshots of an evolving 2.2 MB source tree; every generation
+  restores and verifies byte-identical; history browses as directories
+  through a FUSE mount (`g1/ g2/ g3/ g4/`);
+- store holds 3 generations (6.7 MB logical) in 2.52 MB (0.38×);
+- replication to a second store: 2.55 MB full, then **0.16 MB delta**
+  for the next generation — the #37 delta problem answered by workflow
+  ordering (snap → condense → compact → push) rather than rule changes;
+- the replica needs no import step and no format: it is a store.
+
+Dogfood findings (FRICTION #44): the ≥3-file admission threshold makes
+dedup warm up one snapshot late (kept as charter law; a 2-file
+threshold awaits a ruling), and deltas are chunk-grained rather than
+edit-grained — #15's last costume.
+
 ## Reproducing
 
 ```
@@ -586,4 +609,5 @@ python3 phase8.py         # phase 8: open-key grouping via write-side projection
 python3 phase9.py         # phase 9: 11 MB real-corpus scale run
 python3 phase10.py        # phase 10: 8-generation snapshot corpus rematch
 python3 phase11.py        # phase 11: native fire loop vs cat, warm and cold
+python3 phase12.py        # phase 12: the am.tool workflow end to end
 ```

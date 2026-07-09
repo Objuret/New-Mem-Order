@@ -69,6 +69,12 @@ python3 phase10.py
 
 # phase 11 — native fire loop (C), speed vs cat:
 python3 phase11.py                            # builds native/amfire.c
+
+# phase 12 — am.tool, the snapshot/replication CLI:
+python3 phase12.py                            # full workflow end to end
+python3 -m am.tool snap DIR --label v1        # then: snaps, ls, cat,
+python3 -m am.tool restore v1 OUT             # restore, verify, stats,
+python3 -m am.tool push HOST:PORT             # serve, push, mount
 ```
 
 Python 3.8+, stdlib only.

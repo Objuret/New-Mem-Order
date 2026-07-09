@@ -132,6 +132,18 @@ ownership principle; workload-shape delegation for the rest; forced by
 FRICTION.md #31 when naive bidirectional sync reopened the lost-update
 window at the copy layer.
 
+### 1.17 (Phase 12) The tool is a world-side composition
+`am.tool` (snap/restore/verify/stats/serve/push/mount) is a CLI that
+composes existing chartered machinery: layer puts for ingest, the
+condensation and compaction passes after every snapshot, phase-5 sync
+for replication, the FUSE binding for browsing. Snapshots are fresh
+namespaces `fs/<label>/…` (immutability by never-overwrite); the push
+high-water mark lives in a sibling file OUTSIDE the store (driver-side
+state, ruling 1.13). No new structures, no grammar changes, no rule
+changes; the ≥3-file condensation threshold is kept as charter law
+even though backup use would prefer 2 (FRICTION.md #44) — that change
+awaits a ruling.
+
 ---
 
 ## 2. Open structural questions for Jocke (NOT implemented)

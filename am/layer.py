@@ -206,6 +206,18 @@ class Layer:
             self._cache_bytes += len(value)
         return value
 
+    # --- whole-file API for world-side tools (no FUSE required) ---
+
+    def put(self, path, data, mode=0o644, mtime_ns=None):
+        """Store a file's whole content (create or replace)."""
+        self._op("put")
+        self._store(path, data, mode & 0o7777, mtime_ns=mtime_ns)
+
+    def put_symlink(self, path, target, mtime_ns=None):
+        self._op("put")
+        self._store(path, target.encode(), 0o777, ftype=b"l",
+                    mtime_ns=mtime_ns)
+
     # --- the API programs see ---
 
     def getattr(self, path):
