@@ -538,6 +538,40 @@ content (versions, backups, copies — most of the world's stored bytes)
 → reference-sharing wins, and the compressed form remains per-file
 demandable, which no archive is. FRICTION #39–#40.
 
+---
+
+# Phase 11 — the native fire loop (2026-07-09)
+
+Every prior phase measured speed's determinants; this one measures
+speed. `native/amfire.c` (~300 lines of C) realizes the grammar's read
+path per spec §8 — byte-compatible with every stored world, templates
+resident at start. Kill condition, stated in advance: if native firing
+can't approach raw-read throughput, the conversions the model deleted
+were cheaper than the interpretation it added. Benchmarked on the
+phase-10 store (4.6 MB of chains serving 30.4 MB of content) vs raw
+reads of the plain corpus. Reproduce: `python3 phase11.py`.
+
+| | fire (deliver 30.4 MB) | raw read (`cat`-equivalent) | ratio |
+|---|---|---|---|
+| warm | 412 MB/s | 479 MB/s | **0.86×** |
+| cold | 84 MB/s | 199 MB/s | 0.42× |
+
+**The kill condition did not trigger.** Warm, interpretation costs 14%
+over raw reading — while the firing path reads 6.6× fewer bytes from
+disk (the store is 0.15× the content). Fidelity is proved the strong
+way: an independent C interpreter fired stores written by Python and
+every rendered byte checksum-matched the plain corpus. Cold is the new
+honest cost: reference-chasing opens ~4× more small files, so
+latency-limited media pay (FRICTION #41) — bandwidth-limited media
+win. Python-speed folklore corrected while we're at it: direct Python
+render is 85 MB/s (native = 5×); the earlier 5–8 MB/s was FUSE
+round-trips (#42).
+
+§0's argument now has numbers on every clause: the deleted machinery
+never ran (phases 1–10), the added interpretation is nearly free
+(this phase), and the byte movement saved is 6.6× on recurring content
+(phase 10).
+
 ## Reproducing
 
 ```
@@ -551,4 +585,5 @@ python3 phase7.py         # phase 7: two writers, merge-as-query, convergence
 python3 phase8.py         # phase 8: open-key grouping via write-side projection
 python3 phase9.py         # phase 9: 11 MB real-corpus scale run
 python3 phase10.py        # phase 10: 8-generation snapshot corpus rematch
+python3 phase11.py        # phase 11: native fire loop vs cat, warm and cold
 ```

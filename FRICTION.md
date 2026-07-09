@@ -565,3 +565,44 @@ machinery from phases 3 and 6.**
   same fired-emit path as everything else, render-verified, in 13.6 s.
 - The condensed store and the replication wire are within 2% of each
   other — stored form = wire form held at scale, after condensation.
+
+---
+
+# Phase 11 — the native fire loop (2026-07-09)
+
+## 41. Cold reads are IOPS-bound: reference-chasing costs opens
+
+Warm, native firing delivers 412 MB/s vs 479 MB/s for raw reads of the
+plain tree — interpretation costs 14%. Cold, firing drops to 0.42× of
+raw reading: rendering 1,228 files opens ~5,000 small store files
+(heads, chains, chunks, templates) against the corpus's 1,228, and
+cold-cache open latency dominates. The model's store trades bandwidth
+(6.6× less data read) for operations (4× more opens). On
+bandwidth-limited media (network filesystems, throttled cloud disks)
+that trade wins; on latency-limited media it loses. A packed layout
+(many chains per container file, references as offsets) is the obvious
+engineering answer and a real structural question — container files vs
+one-instruction-one-file — for a later ruling if it matters.
+
+**Verdict: honest cost, newly visible only at native speed.**
+
+## 42. The Python-speed folklore corrected
+
+Direct Python rendering of the store runs 85 MB/s — the 5-8 MB/s
+numbers of phases 9-10 were dominated by FUSE round-trips, not by the
+interpreter. Native is 5× direct Python and ~50× the through-FUSE path.
+Recorded so the report never implies Python was 1000× off.
+
+## 43. What produced zero friction in phase 11
+
+- **Byte-compatibility held on first contact**: a 300-line C program
+  fired stores written by the Python runtime, and the checksum of every
+  rendered byte matched the plain corpus (`fold=8549ffed37065481` from
+  both paths). One representation, two independent interpreters, zero
+  format code.
+- **The section-0 kill condition did not trigger**: warm firing is
+  within 14% of `cat` while reading 6.6× fewer bytes from disk. The
+  interpretation the model adds is nearly free; the movement it deletes
+  is real.
+- **Templates-as-residence worked exactly as drawn**: 1,506 blocks
+  loaded once at start, then every reference a memcpy from warm memory.

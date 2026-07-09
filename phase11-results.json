@@ -1,0 +1,30 @@
+{
+ "fire_warm": {
+  "files": 1228,
+  "bytes": 30434550,
+  "seconds": 0.0739,
+  "mbps": 411.8
+ },
+ "read_warm": {
+  "files": 1228,
+  "bytes": 30434550,
+  "seconds": 0.0635,
+  "mbps": 479.3
+ },
+ "fire_cold": {
+  "files": 1228,
+  "bytes": 30434550,
+  "seconds": 0.3606,
+  "mbps": 84.4
+ },
+ "read_cold": {
+  "files": 1228,
+  "bytes": 30434550,
+  "seconds": 0.1526,
+  "mbps": 199.4
+ },
+ "python_render": {
+  "seconds": 0.36,
+  "mbps": 84.7
+ }
+}

@@ -66,6 +66,9 @@ python3 phase9.py
 
 # phase 10 — snapshot corpus: dedup vs gzip rematch:
 python3 phase10.py
+
+# phase 11 — native fire loop (C), speed vs cat:
+python3 phase11.py                            # builds native/amfire.c
 ```
 
 Python 3.8+, stdlib only.
