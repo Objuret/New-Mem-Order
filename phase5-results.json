@@ -1,0 +1,17 @@
+{
+ "full_sync": {
+  "files": 25,
+  "wire_bytes": 1025,
+  "content_bytes": 486
+ },
+ "lib_sync": {
+  "files": 2,
+  "wire_bytes": 84
+ },
+ "delta_sync": {
+  "files": 2,
+  "wire_bytes": 163
+ },
+ "json_anecdote_bytes": 346,
+ "queries_identical": true
+}

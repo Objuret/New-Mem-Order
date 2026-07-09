@@ -313,3 +313,54 @@ replaced behind their name.
   composition shapes became resident structures, instances shrank to
   shape-ref + operands, everything rendered byte-identical through a
   router reload — the arrival-is-recognition property now exists.
+
+---
+
+# Phase 5 — the wire (2026-07-09)
+
+## 25. Discovery is namespace enumeration, and the temptation was a manifest
+
+The sync driver finds what to ship by walking the source world's
+directories (the readdir precedent) and selecting on backing mtime. The
+convenient alternative — a manifest of what exists / what changed — is
+the banned index wearing sync clothes. Refused. The driver's only state
+is its own high-water mark, held on its side of the edge like rsync's.
+
+**Verdict: discipline held; the reference tree was already the catalog.**
+
+## 26. Dictionary delivery is restart-priced
+
+B could STORE condensed instructions it had no residence for (moving
+opaque values is not interpreting them) but firing refused with
+"unknown structure id 101" — and after lib/ was shipped, B's router had
+to be reloaded before the shapes were resident, because residency
+changes only at router start (A1's conservative reading, all phases).
+Load-on-first-reference would be the natural A4 reading — nothing is
+resident unless demanded — but it changes structure residency at
+runtime, which touches A1. Open question for Jocke: DECISIONS.md §2.2.
+
+**Verdict: honest model edge, cheap in practice** (a router restart is
+milliseconds; state is files), **but the lazy reading is attractive and
+needs a ruling, not an implementation.**
+
+## 27. What produced zero friction in phase 5
+
+- **No wire protocol was designed.** The stored form is the wire form;
+  replication is emits carrying opaque files as values; the client
+  framing from phase 1 carried node-to-node traffic unchanged.
+- **No format negotiation, no import step.** B fired A's instruction
+  bytes natively the moment residence matched — 26 query results
+  byte-identical across nodes.
+- **The refusal named the cure.** "unknown structure id 101" is a
+  self-describing bootstrap protocol that nobody wrote: the error
+  grammar node plus condensed traffic equals dictionary distribution.
+- **Old and new interoperate.** An uncondensed post synced after the
+  condensed corpus fired fine with no reload — spelled-out shapes and
+  promoted shapes coexist in one chain.
+- **Honest number, recorded**: at this toy scale, minimal JSON of the
+  same logical data (346 B) is SMALLER than the full sync's wire bytes
+  (1,025 B — per-file emit wrappers and references dominate tiny
+  files). The model's wire story pays at the delta (163 B for one new
+  post, two files) and in what never had to exist: schema, parser,
+  version handshake. Scale is where shared residence should win;
+  unmeasured until a bigger corpus.

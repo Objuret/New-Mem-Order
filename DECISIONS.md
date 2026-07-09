@@ -89,6 +89,20 @@ references. *Basis:* charter §7 requires idempotent re-runs; moving the
 fixed boundaries during rewrite breaks that (FRICTION.md #20).
 Engineering detail of the pass, same class as 1.3.
 
+### 1.12 (Phase 5) The world may MOVE unsent instructions opaquely
+The sync driver copies stored instruction files between worlds as
+values inside emits, never interpreting the bytes. *Basis:* spec §4
+already grants "deleting an unsent instruction = deleting a file, same
+as now"; moving is the same class of world act, and §8 makes the stored
+form the wire form by definition. The one-interpreter rule is intact:
+only firing interprets.
+
+### 1.13 (Phase 5) Replication discovery = namespace enumeration
+What to ship is found by walking the source world's directories plus
+backing mtime — the readdir precedent (phase-3 §4). A change manifest
+was refused as the banned index (FRICTION.md #25). The driver's
+high-water mark is driver-side state, like rsync's.
+
 ---
 
 ## 2. Open structural questions for Jocke (NOT implemented)
@@ -127,3 +141,34 @@ only knowable by demanding it.
 nothing was added); revisit B only if a workload needs contended
 multi-writer posting to be loss-free. B is the smaller amendment if one
 is ever wanted.
+
+### 2.2 May a router make a structure resident at first reference?
+
+Phase 5 delivered promoted structures across the wire: the receiver
+stored them fine but could not fire condensed chains until its router
+restarted, because residency changes only at router start (the
+conservative A1 reading used in every phase). The refusal-then-ship
+bootstrap works and is what's built; the question is the restart.
+
+- **Option A — status quo:** library residency is a start-time event.
+  Growth stays an offline act; A1 untouched. Cost: a router reload per
+  dictionary delivery (milliseconds; state is files).
+- **Option B — load-on-first-reference:** an unknown structure id whose
+  definition exists under lib/ is loaded resident at resolution time.
+  The natural A4 reading (nothing resident unless demanded), and it
+  makes dictionary distribution seamless. Cost: structure residency now
+  changes at runtime, which reads against A1's "permanently resident,
+  immutable" — the definition itself never mutates, but the set of
+  resident things does.
+
+**Recommendation: B, framed as an A1 clarification** (A1 fixes the
+*universal* set and immutability of definitions; residency of
+store-local promotions is an engineering property like router count).
+NOT implemented — awaiting Jocke's ruling.
+
+### 2.3 Remote references (noted, not needed, not designed)
+
+Phase 5 never needed a demand to cross the wire: the sender ships and
+the receiver fires locally. A reference that names another node's world
+would be a structural extension the spec is silent on. No option
+analysis until a workload actually demands it.

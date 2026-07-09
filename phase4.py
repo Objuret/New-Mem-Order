@@ -187,7 +187,8 @@ def main():
     # shape condensation (offline), then idempotency
     size0 = store_bytes()
     from am.shapemine import run as shapemine
-    r1 = shapemine(WORLD, log_path=os.path.join(ROOT, "LIBRARY.md"))
+    log = None if "--no-log" in sys.argv else os.path.join(ROOT, "LIBRARY.md")
+    r1 = shapemine(WORLD, log_path=log)
     r2 = shapemine(WORLD)
     assert r2["rewritten"] == 0 and not r2["admitted"], "not idempotent"
     size1 = store_bytes()

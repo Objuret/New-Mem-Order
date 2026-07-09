@@ -46,6 +46,10 @@ python3 -m am.condense --store store          # offline condensation pass
 python3 phase4.py                             # ledger workload, queries,
                                               # shape pass, idempotency
 python3 -m am.shapemine --world world         # shape pass by hand
+
+# phase 5 — the wire (run phase4.py first):
+python3 phase5.py                             # two routers: replication,
+                                              # dictionary bootstrap, deltas
 ```
 
 Python 3.8+, stdlib only.

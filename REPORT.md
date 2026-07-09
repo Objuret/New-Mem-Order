@@ -346,6 +346,54 @@ demand nodes (supersede-by-new-ref only works at heads); and the
 zero-friction list — composition, composed refusals, and
 recognition-on-arrival — is the phase's actual result.
 
+---
+
+# Phase 5 — the wire (2026-07-09)
+
+Transfer-is-activation, tested between two routers for the first time.
+Node A: the phase-4 world (board, ledgers, promoted shapes). Node B: an
+empty world, universal library only. No wire protocol was designed —
+the stored form is the wire form (spec §8), so replication is emits
+carrying opaque instruction files as values, over the same client
+framing phase 1 built. Reproduce: `python3 phase4.py --no-log` then
+`python3 phase5.py`; raw numbers in `phase5-results.json`.
+
+## What happened
+
+1. **Content without the dictionary**: B stored all 25 files (1,025
+   wire bytes) but firing a condensed chain refused: `unknown structure
+   id 101`. The error grammar node plus condensed traffic IS a
+   bootstrap protocol nobody wrote — the refusal names exactly what the
+   receiver lacks.
+2. **84 bytes of library shipped**, B's router reloaded, and **all 26
+   phase-4 query results fired on B byte-identical to A** — sums,
+   sorts, averages, joins, board reads, natively, with no format, no
+   negotiation, no import step.
+3. **Incremental sync**: one new post on A, mtime-selected delta of 2
+   files, **163 wire bytes** — heads and deltas, as the spec predicts
+   traffic should look. The new message was uncondensed (posts spell
+   their shape out until a pass sees them) and interoperated with the
+   condensed corpus with no reload.
+
+## Honest numbers
+
+Minimal JSON of the same logical data is 346 bytes — SMALLER than the
+full sync's 1,025 wire bytes at this toy scale, where per-file emit
+wrappers and references dominate tiny files. Recorded as-is
+(FRICTION.md #27). What the model buys here is not the full-sync byte
+count: it is the 163-byte delta, and everything that never had to
+exist — schema, parser, version handshake, import pipeline. Whether
+shared residence wins on raw bytes at scale is unmeasured until a
+bigger corpus.
+
+## New open questions (DECISIONS.md)
+
+§2.2: may a router make a structure resident at first reference instead
+of at start? (Dictionary delivery is currently restart-priced; the lazy
+reading is the natural A4 move but touches A1 — recommendation written,
+NOT implemented, awaiting ruling.) §2.3: remote references — noted,
+never needed, undesigned.
+
 ## Reproducing
 
 ```
@@ -353,4 +401,5 @@ python3 demo.py           # phases 1-2: board + queries
 python3 report.py         # phase 1-2 measurements from the run
 python3 phase3_tests.py   # phase 3: FUSE mount, four acceptance tests
 python3 phase4.py         # phase 4: ledger workload + shape condensation
+python3 phase5.py         # phase 5: two routers, replication, bootstrap
 ```
