@@ -28,6 +28,7 @@ SORT = 7
 DIV = 8
 SUB = 9
 PICK = 10
+UNIQ = 11
 
 # Promoted shapes (phase 4): structure ids >= PROMOTED_BASE are loaded
 # from <root>/lib at router start. A shape body may contain operand-slot
@@ -150,6 +151,18 @@ def _sub(values):
     return b"%d" % (_int(values[0]) - _int(values[1]))
 
 
+def _uniq(values):
+    # collapse ADJACENT duplicate segments (pair with sort for a key set)
+    if len(values) != 2:
+        raise Refusal(b"uniq takes (value, delimiter)")
+    hay, delim = values
+    out = []
+    for p in _segments(hay, delim):
+        if not out or out[-1] != p:
+            out.append(p)
+    return b"".join(p + delim for p in out)
+
+
 _CMP = {b"ge": lambda a, b: a >= b, b"gt": lambda a, b: a > b,
         b"le": lambda a, b: a <= b, b"lt": lambda a, b: a < b,
         b"eq": lambda a, b: a == b}
@@ -251,4 +264,5 @@ def make_registry(world_root):
         DIV: _div,              # pure
         SUB: _sub,              # pure
         PICK: _pick,            # pure
+        UNIQ: _uniq,            # pure
     })

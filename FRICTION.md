@@ -449,3 +449,36 @@ merge — exactly like every timestamp-ordered system ever built.
   the world differs across a demand boundary — the spec's own words —
   and re-syncing reconverges without any repair step.
 - **Zero new structures, zero grammar changes** for the entire phase.
+
+---
+
+# Phase 8 — open-key grouping (2026-07-09)
+
+## 34. The index turned out to be content
+
+Phase 2's #10 left open-key grouping as standing falsification
+pressure: keys inside rendered content are unreachable without a
+resident parser. The resolution required no parser and no index
+component: the post firing also appends the author to a projection
+chain — one more unsent-instruction chain, swapped atomically in the
+same indivisible firing as the message. The key set is then a query
+(`uniq∘sort∘demand(authors)`), and grouping proceeds with keys the
+demander just learned. The projection is ordinary content: demandable,
+replicable by sync, condensable by the passes, compactable, owned by
+its writer.
+
+**Verdict: FRICTION #8's prediction confirmed** — field-precise queries
+were answered by a different *stored* shape, not by read-side
+machinery. The cost is honest and known from every database ever built:
+the writer pays for the projections readers will want, and a projection
+not written at post time cannot be conjured later without re-posting
+history (a world-side migration, like any backfill).
+
+## 35. What produced zero friction in phase 8
+
+- One structure (`uniq`, a pure adjacent-dedup fold) covered key-set
+  extraction; the rest was composition over phase-2/4 structures.
+- Four emits — message, projection entry, two head swaps — in ONE
+  firing kept post atomicity with no new mechanism.
+- A never-before-seen user was discovered by the same query that found
+  the old ones; no code anywhere holds a user list anymore.

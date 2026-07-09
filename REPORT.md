@@ -459,6 +459,26 @@ ownership to shipping, not by coordination (FRICTION.md #31, DECISIONS
 1.16). Reproduce: `python3 phase7.py`; results in
 `phase7-results.json`.
 
+---
+
+# Phase 8 — open-key grouping: shape, not machinery (2026-07-09)
+
+The last standing falsification pressure from phase 2 (#10): group
+posts by user when nobody knows the user set. Keys inside rendered
+content are unreachable without a resident parser, which stays refused.
+The model's answer, predicted by FRICTION #8 and now demonstrated: the
+WRITER stores the projection. The post firing appends the author to a
+projection chain — a fourth emit in the same indivisible firing — and
+the unknown key set becomes a query: `uniq(sort(demand(authors)))`.
+Grouping then composes exactly as phase 2 did, with keys the demander
+just learned; a never-before-seen poster is discovered by the same
+query. One new structure (`uniq`, a pure adjacent-dedup fold; universal
+tier 10 → 11), zero index components: the projection is ordinary
+content — demandable, replicable, condensable, compactable, owned by
+its writer. The honest cost is the one every database pays: projections
+must be written at write time; conjuring one later is a world-side
+backfill. Reproduce: `python3 phase8.py`.
+
 ## Reproducing
 
 ```
@@ -469,4 +489,5 @@ python3 phase4.py         # phase 4: ledger workload + shape condensation
 python3 phase5.py         # phase 5: two routers, replication, bootstrap
 python3 phase6.py         # phase 6: compaction + render cache pricing
 python3 phase7.py         # phase 7: two writers, merge-as-query, convergence
+python3 phase8.py         # phase 8: open-key grouping via write-side projection
 ```

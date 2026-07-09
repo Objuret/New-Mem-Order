@@ -1,0 +1,18 @@
+{
+ "keys": [
+  "alice",
+  "bob",
+  "carol",
+  "dave"
+ ],
+ "table": [
+  "alice: 3",
+  "bob: 1",
+  "carol: 2",
+  "dave: 1"
+ ],
+ "new_structures": [
+  "uniq"
+ ],
+ "projection": "authors chain, written by the same firing as the post"
+}

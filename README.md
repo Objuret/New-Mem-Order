@@ -57,6 +57,9 @@ python3 -m am.compact --store phase3/store    # compaction by hand
 
 # phase 7 — multi-writer, merge-as-query:
 python3 phase7.py                             # two writers, convergence
+
+# phase 8 — open-key grouping via write-side projection:
+python3 phase8.py                             # unknown users discovered
 ```
 
 Python 3.8+, stdlib only.

@@ -20,6 +20,7 @@ not drift.
 | 8 | `div` | pure | Phase-4 averages: scalar division (avg = div∘(sum, tally) — composed, no avg structure). Division by zero refuses. | 2026-07-09 |
 | 9 | `sub` | pure | Phase-4 remaining-budget: scalar subtraction across two demanded chains (the join-shape is composed by the demander, not a structure). | 2026-07-09 |
 | 10 | `pick` | pure | Phase-4 threshold filter: `select` matches by containment, not magnitude. Comparator and threshold are values. | 2026-07-09 |
+| 11 | `uniq` | pure | Phase-8 open-key grouping: extracting the key set from a write-side projection chain (`uniq∘sort`). Adjacent-duplicate fold; delimiter is a value. | 2026-07-09 |
 
 ## Grammar nodes used
 
@@ -41,6 +42,7 @@ into the grammar must not shrink the headline number.
 | phase 2 (computation pressure) | 5 (4 pure + 1 terminal) | 4 | **9** |
 | phase 3 (the layer, real content) | 10 (5 universal + 5 promoted templates) | 4 | **14** |
 | phase 4 (arithmetic + shapes) | 17 (10 universal + 5 templates + 2 shapes) | 4 | **21** |
+| phase 8 (open-key grouping) | 18 (11 universal + 5 templates + 2 shapes) | 4 | **22** |
 
 Phase 2 grew the library by exactly the three query shapes (filter, fold,
 positional take), all pure, all with conditions as values. No grammar
@@ -68,7 +70,9 @@ the count now has two tiers, 5 universal + N-per-store.
 - `group-by` / key-extraction (phase 2): "count posts per user" for an
   UNKNOWN user set would need a structure that extracts keys between
   format markers — a resident parser. Refused; the demander supplies the
-  user set instead (FRICTION.md #10).
+  user set instead (FRICTION.md #10). **Resolved in phase 8 without a
+  parser**: the writer stores an authors projection chain, the key set
+  becomes a query (`uniq∘sort`), grouping composes as before (#34).
 - `count-lines`: `tally` with the needle every segment contains would
   cover it; never separately forced.
 - `max` / `min` / `avg` / `count-over` / `top-N` / `join` (phase 4): all
