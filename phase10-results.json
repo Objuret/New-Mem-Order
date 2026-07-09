@@ -1,0 +1,17 @@
+{
+ "corpus": {
+  "raw": 30434550,
+  "ext4_blocks": 32841728,
+  "files": 1228
+ },
+ "unique_content_bytes": 5341168,
+ "templates": 1506,
+ "template_bytes_saved": 26397233,
+ "store_final": {
+  "raw": 4598469,
+  "ext4_blocks": 18362368,
+  "files": 4130
+ },
+ "targz_anecdote_bytes": 7625778,
+ "full_sync_wire_bytes": 4711795
+}

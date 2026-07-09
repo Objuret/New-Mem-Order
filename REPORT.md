@@ -507,6 +507,37 @@ Edit deltas re-ship whole files (153 kB for three small appends) — the
 literal-reference opacity cost (#15), priced at the wire. FRICTION
 #36–#38.
 
+---
+
+# Phase 10 — the recurrence-shaped corpus (2026-07-09)
+
+Phase 9's honest loss (gzip 4× better on unique content) demanded the
+rematch on the corpus shape the model's compression story is about:
+version history. Eight snapshot generations of an evolving source tree
+— the backup workload — 1,228 files, 30.4 MB logical, 5.3 MB unique.
+Reproduce: `python3 phase10.py`; numbers in `phase10-results.json`.
+
+| form | MB | ×logical |
+|---|---|---|
+| plain ext4 | 30.43 | 1.00 |
+| tar.gz (labeled anecdote) | 7.63 | 0.25 |
+| **store, condensed+compacted** | **4.60** | **0.15** |
+| wire, full replication | 4.71 | 0.15 |
+| unique-content floor (perfect whole-file dedup) | 5.34 | 0.18 |
+
+**The model beats gzip 1.7× on this terrain and lands under the
+whole-file-dedup floor** — gzip cannot see a duplicate past its 32 KiB
+window, condensation dedups by reference across the whole store, and
+recurring blocks inside *modified* files dedup as well (1,506 templates,
+13.6 s pass, fidelity verified by cold-remount checksum). The phase ran
+entirely on phase-3/6 machinery; the universal tier stayed at 11.
+
+Together with phase 9 the compression claim is now scoped honestly in
+both directions: unique snapshots → entropy coding wins; recurring
+content (versions, backups, copies — most of the world's stored bytes)
+→ reference-sharing wins, and the compressed form remains per-file
+demandable, which no archive is. FRICTION #39–#40.
+
 ## Reproducing
 
 ```
@@ -519,4 +550,5 @@ python3 phase6.py         # phase 6: compaction + render cache pricing
 python3 phase7.py         # phase 7: two writers, merge-as-query, convergence
 python3 phase8.py         # phase 8: open-key grouping via write-side projection
 python3 phase9.py         # phase 9: 11 MB real-corpus scale run
+python3 phase10.py        # phase 10: 8-generation snapshot corpus rematch
 ```

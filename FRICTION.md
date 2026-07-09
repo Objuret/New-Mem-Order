@@ -529,3 +529,39 @@ and the wire inherits the cost.
   sub-second replication of the full store.
 - **Every pass composed**: condense → compact → sync ran back-to-back
   on a store none of them was written against.
+
+---
+
+# Phase 10 — the recurrence-shaped corpus (2026-07-09)
+
+## 39. The gzip rematch, on dedup's terrain: won
+
+Eight snapshot generations of an evolving source tree, 30.4 MB logical,
+5.3 MB of unique content. gzip entropy-codes but cannot see a duplicate
+past its 32 KiB window, so tar.gz holds 7.63 MB. Condensation dedups by
+reference across the entire store: 1,506 templates, and the
+condensed+compacted store rests at **4.60 MB — 1.7× smaller than
+tar.gz, and below the perfect whole-file-dedup floor (5.34 MB)**,
+because recurring blocks inside *modified* files dedup too. Full
+replication to a second node moves 4.71 MB of wire. Fidelity verified
+by cold-remount tree checksum.
+
+Paired with phase 9 (#36), the compression story is now complete and
+honest in both directions: unique content → gzip wins 4×; recurring
+content (versions, backups, copies) → the model wins 1.7× over gzip
+and beats whole-file dedup. Universality-compression is dedup-shaped,
+and dedup-shaped corpora are what most stored bytes in the world
+actually look like.
+
+**Verdict: the model's storage claim, finally standing on the right
+terrain — and the win needed nothing new: the phase ran entirely on
+machinery from phases 3 and 6.**
+
+## 40. What produced zero friction in phase 10
+
+- Zero universal additions again (11 → 11); zero code written for the
+  phase beyond the harness itself.
+- 1,506 template admissions and thousands of rewrites went through the
+  same fired-emit path as everything else, render-verified, in 13.6 s.
+- The condensed store and the replication wire are within 2% of each
+  other — stored form = wire form held at scale, after condensation.

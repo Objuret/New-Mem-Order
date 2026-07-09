@@ -63,6 +63,9 @@ python3 phase8.py                             # unknown users discovered
 
 # phase 9 — scale: 11 MB of real stdlib source, full pipeline:
 python3 phase9.py
+
+# phase 10 — snapshot corpus: dedup vs gzip rematch:
+python3 phase10.py
 ```
 
 Python 3.8+, stdlib only.
