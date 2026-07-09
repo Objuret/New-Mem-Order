@@ -482,3 +482,50 @@ history (a world-side migration, like any backfill).
   firing kept post atomicity with no new mechanism.
 - A never-before-seen user was discovered by the same query that found
   the old ones; no code anywhere holds a user list anymore.
+
+---
+
+# Phase 9 — scale on real content (2026-07-09)
+
+## 36. Universality-compression is recurrence-bound, and real source has little fat recurrence
+
+On 11 MB of real stdlib source, condensation admitted 13 templates
+worth 158.8 kB — the store landed at −1.0% vs plain ext4, not the −48%
+of the header-heavy phase-3 corpus. And the tar.gz anecdote is 2.56 MB
+against our 10.99 MB wire: gzip wins 4× on unique content, because the
+model's compression is cross-file reference-sharing, not entropy
+coding, and single-version source code simply doesn't repeat itself in
+≥512-byte blocks. The spec's §7 "degrades gracefully" clause is exactly
+what happened — literals rode as literals, fidelity held, storage sat
+at ext4 par — but §0's "everything stays small" needs its honest
+qualifier: the model's wins are dedup-shaped (versions, copies, shared
+boilerplate, templates), never entropy-shaped. Corpora with history
+recur; a snapshot mostly doesn't. (Transport-level compression of the
+wire would be a world-side channel property, like TLS; noted, not
+built.)
+
+**Verdict: the phase's central finding, and a real spec-rhetoric
+correction.**
+
+## 37. Edit deltas re-ship whole files
+
+Three small appends produced a 153 kB delta — the #15 write
+amplification surfacing at the wire: an edit re-stores (and re-ships)
+every chunk of the file. rsync would have moved a few kB. Chunk-level
+reuse across versions stays blocked by literal-reference opacity (#15),
+and the wire inherits the cost.
+
+**Verdict: known edge, now priced at scale.**
+
+## 38. What produced zero friction in phase 9
+
+- **637 real files, 11 MB, byte-identical** through ingest → condense →
+  compact → cold remount read-back. Nobody wrote this content for us.
+- **The universal tier did not move: 11 → 11.** Twenty-five times the
+  volume of everything previous, zero new capability needed — the §6
+  stake at scale, held.
+- **Throughput is usable for a pure-Python falsification prototype**:
+  6.7 MB/s ingest, 7.6 MB/s read-back through FUSE, 4.7 s to condense,
+  sub-second replication of the full store.
+- **Every pass composed**: condense → compact → sync ran back-to-back
+  on a store none of them was written against.

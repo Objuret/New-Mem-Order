@@ -1,0 +1,30 @@
+{
+ "ingest_seconds": 1.7,
+ "store_raw_after_ingest": 17721035,
+ "condense_seconds": 4.7,
+ "templates_admitted": 13,
+ "template_bytes_saved": 158779,
+ "span_rejections": 0,
+ "compact": {
+  "files": 637,
+  "removed": 771,
+  "freed": 7321703
+ },
+ "store_final": {
+  "raw": 10939479,
+  "ext4_blocks": 15294464,
+  "files": 1358
+ },
+ "readback_seconds": 1.5,
+ "full_sync": {
+  "files": 1358,
+  "wire_bytes": 10985407,
+  "seconds": 0.8
+ },
+ "delta_sync": {
+  "files": 8,
+  "wire_bytes": 153194
+ },
+ "targz_anecdote_bytes": 2560010,
+ "universal_additions_needed": 0
+}

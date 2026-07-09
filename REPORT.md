@@ -479,6 +479,34 @@ its writer. The honest cost is the one every database pays: projections
 must be written at write time; conjuring one later is a world-side
 backfill. Reproduce: `python3 phase8.py`.
 
+---
+
+# Phase 9 — scale on real content (2026-07-09)
+
+The "is it actually working and relevant" test: 637 files / 11.0 MB of
+real Python-stdlib source through the whole pipeline — ingest via the
+FUSE mount, condense, compact, cold-remount verification, replication
+to a second node, delta-sync after edits. `phase9-results.json` has the
+raw numbers; `python3 phase9.py` reproduces.
+
+**What held:** byte-identical fidelity end to end; **the universal tier
+did not move (11 → 11) at 25× the previous volume** — the §6 claim's
+strongest evidence yet; usable prototype throughput (6.7 MB/s ingest,
+7.6 MB/s read-back, 4.7 s condensation, sub-second full replication);
+store at ext4 parity (−1.0%) after passes; a never-touched pipeline
+composition (condense → compact → sync) ran clean.
+
+**What got corrected:** the compression rhetoric. Real single-version
+source has little ≥512 B cross-file recurrence — 13 templates, 158.8 kB
+saved — and gzip beats the uncompressed-literal wire 4× (2.56 MB tar.gz
+vs 10.99 MB). The model's storage wins are dedup-shaped (versions,
+copies, boilerplate, templates), never entropy-shaped; §7's
+degrades-gracefully clause performed exactly as written, and §0's
+"everything stays small" now carries that qualifier in this report.
+Edit deltas re-ship whole files (153 kB for three small appends) — the
+literal-reference opacity cost (#15), priced at the wire. FRICTION
+#36–#38.
+
 ## Reproducing
 
 ```
@@ -490,4 +518,5 @@ python3 phase5.py         # phase 5: two routers, replication, bootstrap
 python3 phase6.py         # phase 6: compaction + render cache pricing
 python3 phase7.py         # phase 7: two writers, merge-as-query, convergence
 python3 phase8.py         # phase 8: open-key grouping via write-side projection
+python3 phase9.py         # phase 9: 11 MB real-corpus scale run
 ```
