@@ -49,10 +49,15 @@ def call(host, port, instr):
     return outcome(buf[:end])
 
 
-def sync(src_world, dst_host, dst_port, since_ns=0, lib="include"):
+def sync(src_world, dst_host, dst_port, since_ns=0, lib="include",
+         prefixes=None):
     """Copy unsent instructions newer than since_ns from src_world into
     the world behind the destination router. lib: "include" | "skip" |
-    "only". Returns wire/file accounting."""
+    "only". prefixes: optional list of reference prefixes to ship —
+    replication must respect write ownership (a node ships only what its
+    writer owns), or a stale copy of a foreign head clobbers a fresh one
+    and the lost-update window reopens at the copy layer (FRICTION.md
+    #31). Returns wire/file accounting."""
     src = os.path.realpath(src_world)
     wire_bytes = 0
     content_bytes = 0
@@ -64,6 +69,8 @@ def sync(src_world, dst_host, dst_port, since_ns=0, lib="include"):
             ref = os.path.relpath(path, src)
             is_lib = ref.split(os.sep)[0] == "lib"
             if (lib == "skip" and is_lib) or (lib == "only" and not is_lib):
+                continue
+            if prefixes is not None and not any(ref.startswith(p) for p in prefixes):
                 continue
             st = os.lstat(path)
             if st.st_mtime_ns <= since_ns:

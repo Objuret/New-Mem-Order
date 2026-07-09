@@ -1,0 +1,12 @@
+{
+ "merged_lines": [
+  "[2026-07-09 15:00:01.001] alice: first from A",
+  "[2026-07-09 15:00:02.002] bob: first from B",
+  "[2026-07-09 15:00:03.003] alice: second from A",
+  "[2026-07-09 15:00:04.004] bob: second from B"
+ ],
+ "converged": true,
+ "new_structures": 0,
+ "new_grammar_nodes": 0,
+ "coordination_machinery": "none \u2014 one writer per head, merge at fire time"
+}

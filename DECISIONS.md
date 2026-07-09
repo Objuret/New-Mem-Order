@@ -124,6 +124,14 @@ on the write-once discipline, and it is stated so in FRICTION.md #28.
 numbers remain the published baseline. Checkably invisible: the phase-6
 benchmark asserts raw and cached full-tree checksums are identical.
 
+### 1.16 (Phase 7) Write ownership partitions heads AND replication
+Each writer owns its head (one writer per mutable reference — the
+terminal-binding idea applied at the data layer), and a node ships only
+its writer's references. *Basis:* spec §2 Terminal structure for the
+ownership principle; workload-shape delegation for the rest; forced by
+FRICTION.md #31 when naive bidirectional sync reopened the lost-update
+window at the copy layer.
+
 ---
 
 ## 2. Open structural questions for Jocke (NOT implemented)

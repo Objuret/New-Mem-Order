@@ -24,8 +24,8 @@
   "carol.n_over": "1",
   "carol.sorted": "25\n50\n75\n850\n",
   "carol.left": "-100",
-  "board": "=== thread general ===\n[2026-07-09 14:53] alice: logging expenses now\n[2026-07-09 14:53] bob: same here\n[2026-07-09 14:53] carol: me three\n",
-  "board.alice_posts": "[2026-07-09 14:53] alice: logging expenses now\n"
+  "board": "=== thread general ===\n[2026-07-09 15:02] alice: logging expenses now\n[2026-07-09 15:02] bob: same here\n[2026-07-09 15:02] carol: me three\n",
+  "board.alice_posts": "[2026-07-09 15:02] alice: logging expenses now\n"
  },
  "shapes": [
   {
@@ -49,9 +49,9 @@
    "folded": 22,
    "saved": 52,
    "examples": [
-    "msgs/1783608781426-alice",
-    "msgs/1783608781456-bob",
-    "msgs/1783608781485-carol"
+    "msgs/1783609324283-alice",
+    "msgs/1783609324314-bob",
+    "msgs/1783609324344-carol"
    ]
   }
  ],

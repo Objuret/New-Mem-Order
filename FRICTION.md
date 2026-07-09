@@ -407,3 +407,45 @@ in this model (the phase-1 finding, now as a floor constant).
   boring reason: nothing a cache key names can ever change.
 - **The two passes compose.** Condense then compact leaves a store at
   roughly half the plain-ext4 tree with zero unreachable bytes.
+
+---
+
+# Phase 7 — multi-writer: merge is a query (2026-07-09)
+
+## 31. The lost-update window reappeared at the replication layer
+
+Naive bidirectional sync failed the harness on first run: node A shipped
+its STALE copy of bob's head back over node B's fresh one — §2.1's
+window, reopened by copying instead of posting. The cure was not
+coordination but the same principle that closed it between writers:
+ownership. A node ships only the references its writer owns
+(`sync(..., prefixes=...)`); heads then have one writer AND one shipper.
+
+**Verdict: honest model edge, and a satisfying one** — the fix is the
+phase's own thesis applied to itself. Mutable heads are safe exactly as
+far as single-ownership extends, and no further.
+
+## 32. Chronology is a convention in the rendered line
+
+The merge sorts lines textually; time ordering works because the posts
+render a sortable timestamp prefix. Same class as phase-2 #8/#9: the
+convention is the workload's own, rides as values, and is spoofable by
+content that fakes a prefix. A writer that lies about time reorders the
+merge — exactly like every timestamp-ordered system ever built.
+
+**Verdict: model edge consequence, known shape.**
+
+## 33. What produced zero friction in phase 7
+
+- **Convergence was free.** Merge = sort∘concat over demanded chains —
+  deterministic, so both nodes firing the same instruction over the
+  same replicated data are byte-identical by construction. Nobody wrote
+  a conflict resolver; there is nothing to resolve because nothing was
+  ever contended.
+- **Views cost nothing and live nowhere.** Newest-2 and alice-only are
+  compositions over the merge instruction; different readers can hold
+  different merges over the same history without touching storage.
+- **Divergence is honest, not an error.** Unsynced nodes differ because
+  the world differs across a demand boundary — the spec's own words —
+  and re-syncing reconverges without any repair step.
+- **Zero new structures, zero grammar changes** for the entire phase.

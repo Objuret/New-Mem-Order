@@ -436,6 +436,29 @@ distinction and its soundness argument are in DECISIONS.md 1.15.
 phase3_tests.py pins `--raw`, so every previously published number
 remains the raw model.
 
+---
+
+# Phase 7 — multi-writer: merge is a query (2026-07-09)
+
+Two nodes, two writers, zero coordination. Alice writes only on A, bob
+only on B — one writer per head, so §2.1's window never opens between
+writers. Sync exchanges chains (each node ships only what its writer
+owns); the merged thread is never stored: it is `sort∘concat` over both
+demanded chains, fired at read time. Determinism makes both nodes'
+merges byte-identical — convergence by construction, no conflict
+resolver, because nothing was ever contended. Derived views (newest-2,
+one user's posts) are further compositions over the merge, held by
+readers, resting nowhere. Unsynced nodes diverge honestly (the world
+differs across a demand boundary) and reconverge on re-sync with no
+repair step.
+
+**Zero new structures, zero grammar changes.** One real finding: naive
+bidirectional sync reopened the lost-update window at the copy layer
+(a stale foreign head clobbered a fresh one) — cured by extending write
+ownership to shipping, not by coordination (FRICTION.md #31, DECISIONS
+1.16). Reproduce: `python3 phase7.py`; results in
+`phase7-results.json`.
+
 ## Reproducing
 
 ```
@@ -445,4 +468,5 @@ python3 phase3_tests.py   # phase 3: FUSE mount, four acceptance tests
 python3 phase4.py         # phase 4: ledger workload + shape condensation
 python3 phase5.py         # phase 5: two routers, replication, bootstrap
 python3 phase6.py         # phase 6: compaction + render cache pricing
+python3 phase7.py         # phase 7: two writers, merge-as-query, convergence
 ```

@@ -54,6 +54,9 @@ python3 phase5.py                             # two routers: replication,
 # phase 6 — compaction + render cache (run phase3_tests.py first):
 python3 phase6.py                             # reclaim history, price cache
 python3 -m am.compact --store phase3/store    # compaction by hand
+
+# phase 7 — multi-writer, merge-as-query:
+python3 phase7.py                             # two writers, convergence
 ```
 
 Python 3.8+, stdlib only.
