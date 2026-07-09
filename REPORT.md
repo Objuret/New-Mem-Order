@@ -278,11 +278,79 @@ firings/syscall — the first is what condensation-as-compaction and the
 licensed-but-unbuilt identity cache exist to answer, in some later
 phase, if Jocke rules them in.
 
+---
+
+# Phase 4 — computation pressure + shape condensation (2026-07-09)
+
+The question phase 2 left open: does the universal tier grow linearly
+with computation (the §6 balloon) or converge? Workload: an expense
+ledger over the board world — totals, extremes, averages, sorted
+listings, threshold filters, remaining-budget across two chains — every
+operation parameter a value, nothing fold-shaped firing a
+sub-instruction. Raw numbers: `phase4-results.json`; reproduce with
+`python3 phase4.py`.
+
+## The answer: sub-linear, for the first time
+
+**5 structures in, 8 computations composed out.** Forced additions:
+`sum`, `sort`, `div`, `sub`, `pick` (universal tier 5 → 10 — arithmetic
+atoms and one reorder, exactly the ALU-plus-order kit). NOT added, because
+composition covered them: max and min (`last∘sort`), average
+(`div∘(sum,tally)`), plain count, count-over-threshold (`tally∘pick`),
+top-N, per-user board search, and the join-shape (remaining budget =
+`sub` across two demanded chains — relational join for enumerable keys
+is demander-side composition, no structure). Full table in LIBRARY.md.
+This is the SQL-style convergence the phase existed to test for:
+computation cost atoms, not combinations.
+
+Refusals compose too: average-of-empty-ledger propagates "division by
+zero" from three compositions deep; numeric sort over text refuses. The
+workload contains zero error-handling code.
+
+## Shape condensation: arrival is now recognition
+
+The graph-built-interpreter idea, made model-pure: `am/shapemine.py`
+mines stored instructions for recurring composition shapes (≥3 distinct
+files, admitted only if net stored bytes saved > 0) and promotes them as
+resident structures — bodies with per-instance constants folded in and
+varying positions as VALUE slots (demands stay outside as ordinary
+operands; nothing fires values, no computed references). Two shapes
+admitted on the first corpus: the message shape (×3 instances) and the
+ledger-entry shape (×9). Twelve instances rewrote from spelled-out trees
+to shape-reference + operands; stored instruction bytes 609 → 542
+(−11%); everything byte-identical through a router reload; second pass
+admits and rewrites nothing.
+
+A rewritten message file's shape is no longer discovered by walking —
+it arrives as a structure ID resolved by table lookup. Recurring
+structure migrated from the traffic into the residence, which is §0's
+compression argument applied to form instead of content.
+
+## Growth curve
+
+**Universal: 2 → 5 → 5 → 10. Store-local: 0 → 0 → 5 templates → +2 shapes.
+Grammar: 4, unchanged through all four phases.**
+
+The two tiers now have three phases of separated evidence: universal
+growth tracks new computation *kinds* and went sub-linear the moment
+composition had enough atoms; store-local growth tracks content and pays
+for itself by construction (admission requires net bytes saved).
+
+## Friction
+
+FRICTION.md #22–#24: constant folding is corpus-relative (three
+same-minute posts folded the timestamp into the shape — admission
+quality scales with corpus size); in-place rewrite is forced for
+interior chain nodes because their references are baked into downstream
+demand nodes (supersede-by-new-ref only works at heads); and the
+zero-friction list — composition, composed refusals, and
+recognition-on-arrival — is the phase's actual result.
+
 ## Reproducing
 
 ```
 python3 demo.py           # phases 1-2: board + queries
 python3 report.py         # phase 1-2 measurements from the run
-python3 phase3_tests.py   # phase 3: mounts FUSE, runs all four
-                          # acceptance tests, writes phase3-results.json
+python3 phase3_tests.py   # phase 3: FUSE mount, four acceptance tests
+python3 phase4.py         # phase 4: ledger workload + shape condensation
 ```

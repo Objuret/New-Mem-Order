@@ -271,3 +271,45 @@ content stability, is what makes re-running a no-op.
 - **Condensation verification is trivial** because rendering is
   deterministic: checksum before, rewrite, render, compare — no "did
   the optimizer change semantics" class of doubt.
+
+---
+
+# Phase 4 — computation pressure + shape condensation (2026-07-09)
+
+## 22. Constant folding is corpus-relative
+
+The three board posts landed in the same minute, so the promoted message
+shape folded the timestamp string in as a CONSTANT alongside the real
+punctuation. Render-verified correct for every rewritten instance, and
+future posts are unaffected (they spell the shape out until a pass sees
+them) — but a small corpus over-folds. The ≥3-instance rule guards
+recurrence, not coincidence.
+
+**Verdict: engineering wrinkle with a real lesson** — shape admission
+quality scales with corpus size, like every induced grammar.
+
+## 23. In-place rewrite was forced by literal references
+
+Phase 3's pass could give rewritten chains fresh references because only
+heads pointed at them. Board messages are different: their references are
+baked into OTHER messages' demand nodes, so fresh refs would cascade a
+rewrite through every downstream demander. The pass instead replaces file
+content in place, render-identical, at the same reference.
+
+**Verdict: honest model edge** — in a literal-reference graph, "supersede
+by new ref" only works at the head layer; interior nodes can only be
+replaced behind their name.
+
+## 24. What produced zero friction in phase 4
+
+- **Eight computations composed; five were added** (see LIBRARY.md).
+  max/min fell out of sort+last, average out of div∘(sum,tally), the
+  budget join out of sub across two demands. First sub-linear phase.
+- **Refusals compose**: average-of-empty-ledger refuses with "division
+  by zero" propagated from three compositions deep; numeric sort over
+  text lines refuses with "not a number". No error-handling code exists
+  anywhere in the workload.
+- **Shape promotion worked on the first corpus it met**: recurring
+  composition shapes became resident structures, instances shrank to
+  shape-ref + operands, everything rendered byte-identical through a
+  router reload — the arrival-is-recognition property now exists.

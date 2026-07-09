@@ -19,7 +19,7 @@ import os
 import sys
 
 from .instruction import Incomplete, Refusal, err, fire, lit, shape, skip
-from .structures import make_registry, resolve_ref
+from .structures import load_promoted, make_registry, resolve_ref
 
 
 class Stats:
@@ -117,7 +117,9 @@ async def handle(reader, writer, structures, world_root, stats):
 
 
 async def serve(host, port, world_root, stats_path):
-    structures = make_registry(world_root)
+    # base library + any promoted shapes/templates under <world>/lib,
+    # loaded once here and immutable for the life of the router (A1)
+    structures = load_promoted(world_root, dict(make_registry(world_root)))
     stats = Stats(stats_path)
     server = await asyncio.start_server(
         lambda r, w: handle(r, w, structures, world_root, stats), host, port)

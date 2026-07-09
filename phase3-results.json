@@ -1,11 +1,11 @@
 {
  "opstats": {
   "getattr": [
-   13745,
-   9398
+   13693,
+   9374
   ],
   "mkdir": [
-   66,
+   65,
    0
   ],
   "create": [
@@ -17,8 +17,8 @@
    5034
   ],
   "read": [
-   807,
-   26041
+   801,
+   26017
   ],
   "truncate": [
    4,
@@ -41,7 +41,7 @@
    12
   ],
   "readdir": [
-   159,
+   157,
    0
   ],
   "chmod": [
@@ -58,13 +58,13 @@
   ]
  },
  "store_before": {
-  "raw": 268757414,
+  "raw": 268757413,
   "ext4_blocks": 287547392,
   "files": 4690,
-  "reachable": 11012495
+  "reachable": 11012494
  },
  "mirror": {
-  "raw": 10996255,
+  "raw": 10996254,
   "ext4_blocks": 11354112,
   "files": 126
  },
@@ -152,9 +152,9 @@
   "library_total": 10
  },
  "store_after": {
-  "raw": 268891322,
+  "raw": 268891321,
   "ext4_blocks": 288088064,
   "files": 4815,
-  "reachable": 5682464
+  "reachable": 5682463
  }
 }

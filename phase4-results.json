@@ -1,0 +1,60 @@
+{
+ "queries": {
+  "alice.total": "1374",
+  "alice.max": "1200\n",
+  "alice.min": "45\n",
+  "alice.avg": "458",
+  "alice.over100": "129\n1200\n",
+  "alice.n_over": "2",
+  "alice.sorted": "45\n129\n1200\n",
+  "alice.left": "626",
+  "bob.total": "600",
+  "bob.max": "300\n",
+  "bob.min": "300\n",
+  "bob.avg": "300",
+  "bob.over100": "300\n300\n",
+  "bob.n_over": "2",
+  "bob.sorted": "300\n300\n",
+  "bob.left": "-100",
+  "carol.total": "1000",
+  "carol.max": "850\n",
+  "carol.min": "25\n",
+  "carol.avg": "250",
+  "carol.over100": "850\n",
+  "carol.n_over": "1",
+  "carol.sorted": "25\n50\n75\n850\n",
+  "carol.left": "-100",
+  "board": "=== thread general ===\n[2026-07-09 11:49] alice: logging expenses now\n[2026-07-09 11:49] bob: same here\n[2026-07-09 11:49] carol: me three\n",
+  "board.alice_posts": "[2026-07-09 11:49] alice: logging expenses now\n"
+ },
+ "shapes": [
+  {
+   "sid": 100,
+   "sig": "C1(D,L,L)",
+   "instances": 9,
+   "holes": 2,
+   "folded": 1,
+   "saved": 15,
+   "examples": [
+    "amts/alice-0",
+    "amts/alice-1",
+    "amts/alice-2"
+   ]
+  },
+  {
+   "sid": 101,
+   "sig": "C1(D,L,L,L,L,L,L,L)",
+   "instances": 3,
+   "holes": 3,
+   "folded": 22,
+   "saved": 52,
+   "examples": [
+    "msgs/1783597745001-alice",
+    "msgs/1783597745033-bob",
+    "msgs/1783597745066-carol"
+   ]
+  }
+ ],
+ "instruction_bytes_before": 609,
+ "instruction_bytes_after": 542
+}

@@ -41,6 +41,11 @@ python3 -m am.client newest general 2         # N newest posts
 python3 phase3_tests.py                       # all four acceptance tests
 python3 -m am.fuse MOUNTPOINT --store store   # mount by hand
 python3 -m am.condense --store store          # offline condensation pass
+
+# phase 4 — computation + shape condensation:
+python3 phase4.py                             # ledger workload, queries,
+                                              # shape pass, idempotency
+python3 -m am.shapemine --world world         # shape pass by hand
 ```
 
 Python 3.8+, stdlib only.
