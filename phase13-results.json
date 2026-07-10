@@ -4,14 +4,21 @@
  "conventional": {
   "crossings": 11149872,
   "copies": 12308113,
-  "ingest_s": 0.4,
+  "ingest_s": 0.43,
   "query_s": 0.33
+ },
+ "conventional_indexed": {
+  "crossings": 2114161,
+  "copies": 3172402,
+  "ingest_s": 0.58,
+  "query_s": 0.01
  },
  "model": {
   "crossings": 1412995,
   "copies": 2578024,
-  "ingest_s": 6.44,
-  "query_s": 1.74
+  "ingest_s": 7.15,
+  "query_s": 1.95
  },
- "crossings_ratio": 7.89
+ "crossings_ratio_vs_logscan": 7.89,
+ "crossings_ratio_vs_indexed": 1.5
 }

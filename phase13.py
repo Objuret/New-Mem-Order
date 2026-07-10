@@ -93,13 +93,20 @@ class Counters:
 # ---------------------------------------------------------------- conventional
 
 class ConvServer(threading.Thread):
-    """The canonical JSON-over-socket service with a JSON-lines log."""
+    """The canonical JSON-over-socket service with a JSON-lines log.
+    With projected=True it ALSO maintains per-user amounts files at
+    ingest (the indexed design) and answers queries from those — the
+    exact analogue of the model's write-side projection, so the
+    comparison is design-for-design and only the representation
+    discipline differs."""
 
-    def __init__(self, counters):
+    def __init__(self, counters, projected=False, port=PORT_CONV):
         super().__init__(daemon=True)
         self.c = counters
-        self.log = os.path.join(WORK, "conv-data.jsonl")
-        self.sock = socket.create_server(("127.0.0.1", PORT_CONV))
+        self.projected = projected
+        self.log = os.path.join(WORK, "conv-data-%d.jsonl" % port)
+        self.amt = os.path.join(WORK, "conv-amt-%d-%%s.txt" % port)
+        self.sock = socket.create_server(("127.0.0.1", port))
 
     def run(self):
         while True:
@@ -116,7 +123,24 @@ class ConvServer(threading.Thread):
                         with open(self.log, "ab") as lf:
                             lf.write(line)              # copy: store raw line
                         self.c.copies += len(line)
+                        if self.projected:
+                            arow = b"%d\n" % req["amount"]
+                            self.c.crossings += len(arow)   # crossing: encode
+                            with open(self.amt % req["user"], "ab") as af:
+                                af.write(arow)
+                            self.c.copies += len(arow)
                         resp = b'{"ok":true}\n'
+                    elif self.projected:
+                        with open(self.amt % req["user"], "rb") as af:
+                            data = af.read()
+                        self.c.copies += len(data)
+                        self.c.crossings += len(data)   # crossing: decode ints
+                        amounts = [int(x) for x in data.split()]
+                        v = (sum(amounts) if req["op"] == "total"
+                             else sum(1 for a in amounts if a >= req["t"]))
+                        out = json.dumps(dict(value=v))
+                        self.c.crossings += len(out)    # crossing: encode
+                        resp = out.encode() + b"\n"
                     else:
                         totals = {}
                         with open(self.log, "rb") as lf:
@@ -142,13 +166,13 @@ class ConvServer(threading.Thread):
                     self.c.copies += len(resp)
 
 
-def run_conventional(records):
+def run_conventional(records, projected=False, port=PORT_CONV):
     c = Counters()
-    server = ConvServer(c)
+    server = ConvServer(c, projected=projected, port=port)
     server.start()
     t0 = time.monotonic()
     answers = {}
-    with socket.create_connection(("127.0.0.1", PORT_CONV)) as s, \
+    with socket.create_connection(("127.0.0.1", port)) as s, \
             s.makefile("rwb") as f:
         for rec in records:
             out = json.dumps(dict(op="add", **rec))     # crossing: encode
@@ -282,35 +306,45 @@ def main():
     payload = sum(len(json.dumps(r)) for r in records)
 
     conv_ans, cc, conv_ti, conv_tq = run_conventional(records)
+    proj_ans, pc, proj_ti, proj_tq = run_conventional(records, projected=True,
+                                                      port=PORT_CONV + 10)
     am_ans, mc, am_ti, am_tq = run_model(records)
-    assert conv_ans == am_ans, "pipelines disagree on the answers"
+    assert conv_ans == am_ans == proj_ans, "pipelines disagree on the answers"
 
-    def row(name, conv, model, fmt="%.2f"):
-        print("  %-34s %14s %14s" % (name, fmt % conv, fmt % model))
+    def row(name, a, b, m, fmt="%.2f"):
+        print("  %-32s %12s %12s %12s" % (name, fmt % a, fmt % b, fmt % m))
 
-    print("\nTHE METRIC — same job, both stacks (%d records, %.2f MB payload,"
+    print("\nTHE METRIC — same job, three designs (%d records, %.2f MB payload,"
           " %d queries, identical answers)\n"
           % (len(records), payload / 1e6, 2 * len(USERS)))
-    print("  %-34s %14s %14s" % ("", "conventional", "model"))
+    print("  %-32s %12s %12s %12s"
+          % ("", "conv log+scan", "conv indexed", "model"))
     row("crossings bytes / payload byte", cc.crossings / payload,
-        mc.crossings / payload)
-    row("copy bytes / payload byte", cc.copies / payload, mc.copies / payload)
-    row("ingest wall s", conv_ti, am_ti)
-    row("query wall s", conv_tq, am_tq)
-    print("\n  (wall-time caveat: pure-Python fire loop vs C-accelerated json;"
-          "\n   phase 11 measured native firing at 0.86x of cat)")
+        pc.crossings / payload, mc.crossings / payload)
+    row("copy bytes / payload byte", cc.copies / payload,
+        pc.copies / payload, mc.copies / payload)
+    row("ingest wall s", conv_ti, proj_ti, am_ti)
+    row("query wall s", conv_tq, proj_tq, am_tq)
+    print("\n  (wall time is Python-fire-loop vs C-json — not comparable;"
+          "\n   phase 11 holds the native evidence. Crossings and copies are"
+          "\n   byte counts, identical whatever language the converter is in.)")
     results = dict(
         records=len(records), payload_bytes=payload,
         conventional=dict(crossings=cc.crossings, copies=cc.copies,
                           ingest_s=round(conv_ti, 2), query_s=round(conv_tq, 2)),
+        conventional_indexed=dict(crossings=pc.crossings, copies=pc.copies,
+                                  ingest_s=round(proj_ti, 2),
+                                  query_s=round(proj_tq, 2)),
         model=dict(crossings=mc.crossings, copies=mc.copies,
                    ingest_s=round(am_ti, 2), query_s=round(am_tq, 2)),
-        crossings_ratio=round(cc.crossings / mc.crossings, 2),
+        crossings_ratio_vs_logscan=round(cc.crossings / mc.crossings, 2),
+        crossings_ratio_vs_indexed=round(pc.crossings / mc.crossings, 2),
     )
     with open(os.path.join(ROOT, "phase13-results.json"), "w") as f:
         json.dump(results, f, indent=1)
-    print("\ncrossings ratio (conventional / model): %.2fx" %
-          results["crossings_ratio"])
+    print("\ncrossings ratio: %.2fx vs log+scan, %.2fx vs the indexed design"
+          % (results["crossings_ratio_vs_logscan"],
+             results["crossings_ratio_vs_indexed"]))
     print("PASS")
     return 0
 

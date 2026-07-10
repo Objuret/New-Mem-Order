@@ -647,8 +647,16 @@ Recorded so the report never implies Python was 1000× off.
 
 ## 46. The pipeline comparison, honestly annotated
 
-The headline (7.9× fewer crossings, 4.8× fewer copies) comes with its
-books open:
+Challenged by Jocke ("did you just compare python vs c?") and tightened
+in response: wall time WAS Python-vs-C (now labeled not-comparable);
+crossings are byte counts and language-independent; and the design
+asymmetry (their log+scan vs our projection) was measured away by
+adding a third pipeline — conventional WITH the same projection. The
+honest ladder: 14.15 (naive) → 2.68 (indexed) → 1.79 (model) crossings
+per payload byte. The 1.5× residual vs the best conventional design is
+the pure one-representation dividend: encode-at-birth + decode-at-ingest
+are two full-payload crossings the model structurally cannot pay.
+Original annotations:
 
 - **Wall time loses in Python and it is printed next to the win**:
   ingest 6.4 s vs 0.4 s, queries 1.7 s vs 0.3 s. A pure-Python
