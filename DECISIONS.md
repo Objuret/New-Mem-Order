@@ -207,6 +207,29 @@ bootstrap works and is what's built; the question is the restart.
 store-local promotions is an engineering property like router count).
 NOT implemented — awaiting Jocke's ruling.
 
+### 2.4 May a reference name into a container (packed layout)?
+
+Phase 14's true benchmarks isolate the model's last big cost as the
+one-instruction-one-file layout: every reference is a file, so
+fine-grained data pays an open()/create() per reference (10× ingest,
+20× query vs the best conventional design on record-granular work;
+also phase 11's cold-read gap, #41). The engineering answer everywhere
+else in systems is packing: many unsent instructions in one container
+file, references as names-with-offsets ("packs/7@4096").
+
+- **Option A — status quo:** a reference is a file path, full stop.
+  Purest reading; fine for file-granular work; IOPS tax stands.
+- **Option B — packed containers:** a reference may name a container
+  and a position. Spec §2 calls a reference "a name, nothing more —
+  equivalent role to a file path today"; an offset-qualified name is
+  arguably still just a name (files ARE offset ranges on a device), and
+  demand semantics are unchanged. Needs the world-side passes
+  (condense/compact/sync) taught to read and write containers.
+
+**Recommendation: B, framed as world-layout engineering** (the grammar
+and library never see it; only reference resolution does). NOT
+implemented — awaiting Jocke's ruling.
+
 ### 2.3 Remote references (noted, not needed, not designed)
 
 Phase 5 never needed a demand to cross the wire: the sender ships and

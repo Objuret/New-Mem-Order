@@ -636,6 +636,36 @@ category is real, and it is worth about a third of the best
 conventional pipeline's byte-touching, or 5× of the naive one people
 actually ship.**
 
+---
+
+# Phase 14 — the real build: amd and true benchmarks (2026-07-09)
+
+`native/amd.c` (~550 lines): the complete §8 realization for everything
+benchmarked — full grammar, all 11 universal structures, the emit
+terminal, resident templates, the phase-1 wire protocol, one event
+loop. Gates before any timing: **identical ingest through the Python
+router and through amd leaves byte-identical world trees**; answers
+identical across all four pipelines; refusal parity. Reproduce:
+`python3 phase14.py`.
+
+| seconds (10k records, 10 queries) | conv log | conv idx | model py | **model amd** |
+|---|---|---|---|---|
+| construction (pre-built, timed apart) | 0.038 | 0.038 | 0.117 | 0.117 |
+| ingest | 0.293 | 0.394 | 4.803 | **2.992** |
+| queries | 0.324 | 0.005 | 1.695 | **0.113** |
+
+**What the true clocks settle:** the interpreter gap is closed (queries
+15× faster native; phase 13's wall caveat retired). What remains is not
+representation — phase 13's crossings stand at 2.68 vs 1.79 — but
+LAYOUT: one instruction per file means two file creates per record at
+ingest (20k creates = disk-bound 3.0 s vs one appended log at 0.3 s)
+and 2,000 opens per query (0.113 s vs one-file projection at 0.005 s).
+The same IOPS wall as phase 11's cold reads. File-granular workloads
+(phases 9–12) never felt it; record-granular work is ~7× behind the
+best conventional design because of it. The fix is packing (references
+naming into containers) — a genuine structural question, escalated with
+a recommendation to DECISIONS §2.4, not implemented.
+
 ## Reproducing
 
 ```
@@ -652,4 +682,5 @@ python3 phase10.py        # phase 10: 8-generation snapshot corpus rematch
 python3 phase11.py        # phase 11: native fire loop vs cat, warm and cold
 python3 phase12.py        # phase 12: the am.tool workflow end to end
 python3 phase13.py        # phase 13: the end-to-end pipeline head-to-head
+python3 phase14.py        # phase 14: amd (native router) + true benchmarks
 ```

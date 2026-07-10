@@ -1,0 +1,20 @@
+{
+ "records": 10000,
+ "payload_bytes": 788221,
+ "construction_s": {
+  "conv": 0.038,
+  "model": 0.117
+ },
+ "ingest_s": {
+  "conv_log": 0.293,
+  "conv_idx": 0.394,
+  "model_py": 4.803,
+  "model_amd": 2.992
+ },
+ "query_s": {
+  "conv_log": 0.324,
+  "conv_idx": 0.005,
+  "model_py": 1.695,
+  "model_amd": 0.113
+ }
+}

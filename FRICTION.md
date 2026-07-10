@@ -677,3 +677,39 @@ Original annotations:
   bytes include per-record instruction framing and chain-entry files;
   3.27× vs the payload is not free, just 4.8× cheaper than the
   conventional pipeline's shuttling.
+
+---
+
+# Phase 14 — the real build (2026-07-09)
+
+## 47. Native closes the interpreter gap and exposes the layout gap
+
+amd (a ~550-line C router: full grammar, all 11 structures, the emit
+terminal, templates, the phase-1 wire protocol) passes the strong
+gates: identical ingest through Python and through amd leaves
+BYTE-IDENTICAL world trees, answers match across four pipelines, and
+refusals behave. The true clocks then say, on the record-granular job:
+
+- queries: 1.695 s (Python) → 0.113 s (amd) — the interpreter gap was
+  15× and it is gone; but the best conventional design answers in
+  0.005 s, because its projection is ONE file and ours is a chain of
+  2,000 — each query is 2,000 open()s.
+- ingest: 0.3 s conventional vs 3.0 s amd, both disk-bound — the model
+  writes two FILES per record (20k creates); the conventional log
+  appends to one.
+
+So the residual cost is not interpretation and not architecture-of-
+representation (phase 13 settled crossings) — it is the
+one-instruction-one-file LAYOUT, which taxes every fine-grained
+workload with an open()/create() per reference (the same IOPS wall as
+phase 11's cold reads and #41). File-granular workloads (phases 9–12)
+never felt it; record-granular ones are 7× end-to-end behind the best
+conventional design because of it. Packed containers (many unsent
+instructions per file, references as names-with-offsets) are the
+obvious engineering answer and a genuine structural question — whether
+a reference may name into a container — escalated to DECISIONS §2.4,
+options written, NOT implemented.
+
+One symmetric note: construction (Python encoder, 0.117 s) is 3× the
+C-json encode; in a native producer it would be noise. The stack the
+concept implies is now one small C file; everything else is worlds.
