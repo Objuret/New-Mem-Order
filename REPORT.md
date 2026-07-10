@@ -595,6 +595,39 @@ dedup warm up one snapshot late (kept as charter law; a 2-file
 threshold awaits a ruling), and deltas are chunk-grained rather than
 edit-grained — #15's last costume.
 
+---
+
+# Phase 13 — THE metric: the same job on both stacks (2026-07-09)
+
+Every prior number compared model pieces to storage primitives. This
+phase measures what §0 actually indicts: the application pipeline. One
+identical job — 10,000 expense records from 5 producers over a socket
+into durable storage, then 10 aggregate queries — implemented twice,
+idiomatically: the canonical JSON-log service (encode → socket → decode
+→ store → scan-and-decode per query → encode/decode responses) versus
+the model (one instruction per record with a write-side projection;
+each query one instruction fired over the projection). Identical
+answers, asserted. Accounting is mechanical and charged evenly — the
+model's in-flight renders are counted with no discount.
+Reproduce: `python3 phase13.py`.
+
+| per payload byte | conventional | model | ratio |
+|---|---|---|---|
+| **crossings (re-representation)** | **14.15** | **1.79** | **7.9×** |
+| copies (socket + disk) | 15.62 | 3.27 | 4.8× |
+| ingest wall (s) | 0.40 | 6.44 | Python loses |
+| query wall (s) | 0.33 | 1.74 | Python loses |
+
+**The concept on one line: the conventional stack re-represents each
+byte of this workload 14 times between birth and use; the model does it
+1.8 times.** The floor is ~1 (construction) plus the rendered
+projection per query — the write-side projection is what pins a query's
+marginal cost to the projection's size instead of the whole log's. Wall
+time honestly loses in pure Python against C-accelerated json, with
+phase 11 as the evidence that the gap is implementation (native firing
+= 0.86× of cat), not concept. Fairness notes and the full annotation:
+FRICTION.md #46.
+
 ## Reproducing
 
 ```
@@ -610,4 +643,5 @@ python3 phase9.py         # phase 9: 11 MB real-corpus scale run
 python3 phase10.py        # phase 10: 8-generation snapshot corpus rematch
 python3 phase11.py        # phase 11: native fire loop vs cat, warm and cold
 python3 phase12.py        # phase 12: the am.tool workflow end to end
+python3 phase13.py        # phase 13: the end-to-end pipeline head-to-head
 ```

@@ -1,0 +1,17 @@
+{
+ "records": 10000,
+ "payload_bytes": 788221,
+ "conventional": {
+  "crossings": 11149872,
+  "copies": 12308113,
+  "ingest_s": 0.4,
+  "query_s": 0.33
+ },
+ "model": {
+  "crossings": 1412995,
+  "copies": 2578024,
+  "ingest_s": 6.44,
+  "query_s": 1.74
+ },
+ "crossings_ratio": 7.89
+}

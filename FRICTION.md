@@ -640,3 +640,32 @@ Recorded so the report never implies Python was 1000× off.
 - The replica needed no import, no schema, no format version: it is a
   store like any other, and a CLI process loads residency at start, so
   even the §2.2 restart question never surfaces in tool-shaped use.
+
+---
+
+# Phase 13 — the end-to-end metric (2026-07-09)
+
+## 46. The pipeline comparison, honestly annotated
+
+The headline (7.9× fewer crossings, 4.8× fewer copies) comes with its
+books open:
+
+- **Wall time loses in Python and it is printed next to the win**:
+  ingest 6.4 s vs 0.4 s, queries 1.7 s vs 0.3 s. A pure-Python
+  interpreter races C-accelerated json and loses; phase 11 already
+  measured what happens when the fire loop is native (0.86× of cat).
+  Crossings are the concept; wall time is the implementation.
+- **The model's crossings floor is ~1 + renders**: 1.0× for
+  construction (information becomes an instruction once) plus ~0.4× per
+  query pair for the rendered projection each firing materializes —
+  charged with no in-flight discount. The write-side projection is what
+  keeps a query's marginal cost at the projection's size instead of the
+  full log's; without it the two sides converge.
+- **Design fairness, stated**: the conventional side is the canonical
+  log+scan service. An indexed design shifts query cost into ingest-time
+  machinery — the same class the model pays for openly as its
+  projection, in both counters.
+- **Round trips show the literal-reference tax**: the model's copy
+  bytes include per-record instruction framing and chain-entry files;
+  3.27× vs the payload is not free, just 4.8× cheaper than the
+  conventional pipeline's shuttling.

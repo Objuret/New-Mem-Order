@@ -70,6 +70,9 @@ python3 phase10.py
 # phase 11 — native fire loop (C), speed vs cat:
 python3 phase11.py                            # builds native/amfire.c
 
+# phase 13 — THE metric: same job, both stacks, crossings per byte:
+python3 phase13.py
+
 # phase 12 — am.tool, the snapshot/replication CLI:
 python3 phase12.py                            # full workflow end to end
 python3 -m am.tool snap DIR --label v1        # then: snaps, ls, cat,
