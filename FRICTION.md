@@ -713,3 +713,25 @@ options written, NOT implemented.
 One symmetric note: construction (Python encoder, 0.117 s) is 3× the
 C-json encode; in a native producer it would be noise. The stack the
 concept implies is now one small C file; everything else is worlds.
+
+---
+
+# Phase 14 addendum — the rented store (2026-07-09)
+
+## 48. "It only works because you do the operations per file" — correct
+
+Jocke's critique, admitted into the record: the model's storage story
+("no database, no index, no store component") works by DELEGATING
+allocation, naming, lookup and durability to the filesystem — which is
+itself a database. The deletion was real only in the sense that no
+SECOND storage system was built. The subsidy holds at file granularity
+(phases 9–12, the wins) and collapses at record granularity, where
+ext4 charges an inode + dentry + 4 KiB block for every 30-byte record
+(phase 14's 7×, phase 11's cold reads). The §2.4 packing proposal is
+accordingly reframed as what it is: re-importing a small store
+component (an allocator, content-blind) below the granularity where
+the OS's can be rented — while the representation-level deletions
+(formats, parsers, serializers) genuinely never return.
+
+**Verdict: the sharpest external correction of the project**, and it
+came from outside the friction log's own habits.

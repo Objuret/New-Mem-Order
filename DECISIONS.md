@@ -209,13 +209,22 @@ NOT implemented — awaiting Jocke's ruling.
 
 ### 2.4 May a reference name into a container (packed layout)?
 
-Phase 14's true benchmarks isolate the model's last big cost as the
-one-instruction-one-file layout: every reference is a file, so
-fine-grained data pays an open()/create() per reference (10× ingest,
-20× query vs the best conventional design on record-granular work;
-also phase 11's cold-read gap, #41). The engineering answer everywhere
-else in systems is packing: many unsent instructions in one container
-file, references as names-with-offsets ("packs/7@4096").
+Reframed after Jocke's critique (2026-07-09, FRICTION #48): the model
+never deleted the storage system — it RENTS one. "No store component"
+delegates allocation, naming, lookup and durability to the filesystem,
+and that subsidy holds only while the workload's natural unit is about
+the filesystem's natural unit (a file). Phases 9–12 won because they
+lived at file granularity. At record granularity the rent is ruinous —
+an inode, dentry and 4 KiB block per 30-byte record (10× ingest, 20×
+query vs the best conventional design, phase 14; phase 11's cold-read
+gap, #41). Packing — many unsent instructions per container file,
+references as names-with-offsets ("packs/7@4096") — is therefore not a
+neutral optimization: it is the model re-importing a small store
+component (an allocator) below the granularity where ext4's can be
+rented. What would NOT come back: schemas, formats, parsers,
+serializers, WALs — the container holds instructions, and only firing
+interprets them. The axiom's honest form: "storage needs no SECOND
+system, and no first one above file granularity."
 
 - **Option A — status quo:** a reference is a file path, full stop.
   Purest reading; fine for file-granular work; IOPS tax stands.
