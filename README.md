@@ -82,6 +82,9 @@ python3 phase15.py
 # phase 16 — the memory path: bytes, cache misses, time (needs valgrind):
 python3 phase16.py                            # builds native/membench.c
 
+# phase 17 — amx: the mmap'd-pack engine, offset references (DECISIONS 2.4):
+python3 phase17.py                            # builds native/amx.c
+
 # phase 12 — am.tool, the snapshot/replication CLI:
 python3 phase12.py                            # full workflow end to end
 python3 -m am.tool snap DIR --label v1        # then: snaps, ls, cat,

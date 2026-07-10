@@ -1,0 +1,23 @@
+{
+ "records": 10000,
+ "payload_bytes": 788221,
+ "ingest_s": {
+  "conv_log": 0.194,
+  "conv_idx": 0.286,
+  "model_amd": 3.356,
+  "model_amx": 2.51
+ },
+ "query_s": {
+  "conv_log": 0.272,
+  "conv_idx": 0.0037,
+  "model_amd": 0.0743,
+  "model_amx": 0.0109
+ },
+ "store": {
+  "amd_files": 20010,
+  "amd_bytes": 895944,
+  "amx_files": 2,
+  "amx_pack_bytes": 765154
+ },
+ "restart_s": 0.0314
+}

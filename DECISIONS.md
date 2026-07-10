@@ -144,6 +144,29 @@ changes; the ≥3-file condensation threshold is kept as charter law
 even though backup use would prefer 2 (FRICTION.md #44) — that change
 awaits a ruling.
 
+### 1.18 (Phase 17) The pack: references gain a spelling, not a semantic
+Implementing the §2.4 ruling, `native/amx.c` makes these calls:
+- **The world is one append-only container** (`world/pack`), mapped
+  once. An offset-name (`@1f4a`) is still just a name (spec §2); a
+  demand of one is pointer arithmetic instead of an open. Grammar,
+  library, and wire protocol are untouched — only reference
+  resolution learned the new spelling, exactly as §2.4 framed it.
+- **Naming moves to the store.** Emit with the reserved reference `@`
+  appends and RETURNS the assigned offset-name; the demander holds the
+  returned reference — phase 1's pattern made physical. The honest
+  cost of that (writers can no longer name ahead, so chain writes
+  round-trip) is FRICTION #52, measured, not hidden.
+- **The tail side-file is driver-side state**, precedent 1.13/1.17
+  (sync high-water mark, push mark): it makes restart O(1) but is
+  DERIVABLE — phase 17 gates that a grammar walk of the pack from 0
+  reproduces it exactly. The pack is the truth; the side-file is a
+  bookmark.
+- **The mutable edge stays file-shaped.** Heads and the promoted
+  library remain named files (overwrite-at-the-edge, 1.9); file-path
+  references still resolve. The pack holds only immutable unsent
+  instructions, so compaction/condensation over packs is future
+  world-side engineering, not a semantic change.
+
 ---
 
 ## 2. Open structural questions for Jocke (NOT implemented)
@@ -236,8 +259,17 @@ system, and no first one above file granularity."
   (condense/compact/sync) taught to read and write containers.
 
 **Recommendation: B, framed as world-layout engineering** (the grammar
-and library never see it; only reference resolution does). NOT
-implemented — awaiting Jocke's ruling.
+and library never see it; only reference resolution does).
+
+**RULED — B (2026-07-10).** Jocke, verbatim: "Except that you fucking
+built none of this to actually be fast or work like this, that was my
+entire point, not only that you didn't MEASURE it correctly." Read as
+the directive it plainly is: build the engine the way §0/§8 describe
+the machine — which requires references naming into a container. If
+this reading overreaches, `native/amx.c` (phase 17) is quarantined
+engineering: nothing upstream depends on it, no charter document
+changed, and reverting is deleting one file. Design judgments in 1.18;
+measurements in REPORT.md phase 17.
 
 ### 2.3 Remote references (noted, not needed, not designed)
 

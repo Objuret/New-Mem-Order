@@ -816,3 +816,42 @@ and that limit is recorded rather than papered over.
 **Verdict: §0's mechanism confirmed at the traffic level; its
 time-domain payoff is condition-dependent and remains the open
 empirical question for real hardware with PMU access.**
+
+## 52. Store-assigned names couple write latency to the round trip
+
+Phase 17. With file-path references the WRITER names the next link
+before the store ever sees it, so ingest pipelines blind: phase 14
+sent 10,000 record instructions in one stream and read 10,000 acks
+after. With pack offsets the store assigns the name at append time and
+the writer cannot construct link n+1 until it holds the name emit
+RETURNED for link n. Ingest became round-trip-per-record by data
+dependency, not by implementation. The trade then lands strangely
+well: amx STILL ingests slightly faster than amd (2.5–2.6 s vs
+2.7–3.4 s over repeated runs) because one pack append costs so much
+less than two file creates that it eats the whole round-trip penalty
+— but against the conventional stream (0.2 s) the ~10× gap is now
+mostly latency floor (10,005 round trips), where amd's gap was IOPS.
+That is the model fighting back against its own ruling: §2.4's cheap
+demands (pointer arithmetic, no syscall — queries 7–9× faster than
+amd) moved naming ownership from the writer to the store, and the
+write side pays in coupling, not in bytes. Phase 7's discipline
+(one writer per head) caps the damage — independent chains could
+overlap their round trips — and a writer could ask for the tail cursor
+and name ahead speculatively, but that is a second representation of
+the store's allocation state living in the client, so it is refused
+here. Recorded as a trade, priced both ways.
+
+## 53. What the pack did NOT change, and one engineering note
+
+Phase 17 added ZERO structures (universal tier still 11), zero grammar
+nodes, zero wire changes; the same query instructions phase 13 built
+byte-compatibly fire against pack, files, Python, amd, and amx. The
+residual query gap to the best conventional design (0.010 s vs
+0.004 s, was 0.113 s) is no longer layout: it is rendering — every
+query fires the full 2,000-link chain because amx has no render cache;
+phase 6's demander-side cache is the chartered answer if it ever
+matters. Engineering note: -O2 inlined dispatch and demand-resolution
+into the recursive fire function, making each chain link cost ~9 KB of
+stack (segfault past ~1,200 links). Keeping them out of the recursive
+frame (noinline) put the frame at 256 bytes, so the MAX_DEPTH refusal
+fires long before the stack can — a refusal, never a crash.

@@ -726,6 +726,50 @@ joules-per-bit. That conversion is the remaining open empirical
 question, and it needs real hardware with PMU access, not this
 container. FRICTION #51.
 
+---
+
+# Phase 17 — amx: the engine built FOR the machine (2026-07-10)
+
+Chartered by Jocke's charge that amd was a C translation of the Python
+architecture, not the build the model describes: a file per
+instruction, an open per demand, a copy per value. `native/amx.c`
+(DECISIONS §2.4 ruled, judgment 1.18) is the §8 design proper: the
+world is ONE mmap'd append-only pack; a reference is an offset-name
+(`@1f4a`) and demanding it is pointer arithmetic — no syscall, no
+inode; literals and resident templates fire to zero-copy slices; bytes
+are copied at most once into a per-request bump arena; emit with the
+reserved name `@` appends and returns the assigned offset-name, so the
+demander holds the returned reference (phase 1 made physical). Gates
+before any clock: answers byte-identical across all four pipelines;
+full chain renders equal the Python-computed text; refusal parity;
+kill ‑9 + restart gives identical answers (0.031 s); and the tail
+side-file is proven DERIVABLE — a grammar walk of the pack from 0
+reproduces it. Reproduce: `python3 phase17.py`.
+
+| same job as 13/14 (10k records, 10 queries) | conv log | conv idx | model amd | **model amx** |
+|---|---|---|---|---|
+| ingest s | 0.19 | 0.29 | 2.7–3.4 | **2.5–2.6** |
+| queries s | 0.27 | 0.004 | 0.074–0.100 | **0.010–0.011** |
+| store | 1 file | 6 files | 20,010 files / 0.90 MB | **2 files / 0.77 MB** |
+
+(ranges over three same-day runs; amd's ingest is create-bound and
+cache-state sensitive — phase 14 recorded 2.992 s for the same job)
+
+**The layout wall falls where it was predicted to.** Phase 14's
+verdict was that the residual gap was layout, not representation; amx
+removes the layout and the queries confirm it: 7–9× faster than amd,
+from ~19× behind the indexed conventional design to ~2.5× — and the
+remainder is rendering (every query re-fires the 2,000-link chain; no
+cache in amx; FRICTION #53), not IOPS. The store went from 20,010
+inodes to a pack plus a bookmark. The price surfaced exactly where the
+model's own semantics put it: store-assigned names are a data
+dependency, so chain ingest round-trips while every other pipeline
+streams — yet the pack append is so much cheaper than amd's two file
+creates that amx still edges amd on ingest, and the remaining ~10× to
+the conventional stream is latency floor, not bytes (FRICTION #52).
+Universal tier 11 → 11; grammar and wire untouched — the entire change
+lives in reference resolution, which is what §2.4 claimed it would be.
+
 ## Reproducing
 
 ```
@@ -745,4 +789,5 @@ python3 phase13.py        # phase 13: the end-to-end pipeline head-to-head
 python3 phase14.py        # phase 14: amd (native router) + true benchmarks
 python3 phase15.py        # phase 15: a sequential program — branching, state
 python3 phase16.py        # phase 16: the memory path — bytes, misses, time
+python3 phase17.py        # phase 17: amx — the pack engine, gated + clocked
 ```
