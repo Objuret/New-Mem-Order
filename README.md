@@ -86,7 +86,8 @@ python3 phase16.py                            # builds native/membench.c
 python3 phase17.py                            # builds native/amx.c
 
 # on YOUR machine — the memory-path experiment with real CPU counters:
-#   any Linux/mac box with cc + python3; perf and RAPL used if present
+#   any box with a C compiler + python3; perf/simpleperf + RAPL if present
+#   Android: install Termux (F-Droid), then: pkg install python clang git
 python3 hwbench.py
 
 # phase 12 — am.tool, the snapshot/replication CLI:

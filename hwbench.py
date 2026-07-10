@@ -5,8 +5,18 @@ cache SIMULATOR because the build container exposes no performance
 counters. This is the same experiment packaged to run anywhere:
 
     git clone <repo> && cd <repo>
-    python3 hwbench.py            # needs: cc, python3. That's all.
+    python3 hwbench.py            # needs: a C compiler, python3.
     python3 hwbench.py 1000000    # smaller run for a weak machine
+
+On an Android phone (Termux from F-Droid):
+    pkg install python clang git
+    git clone <repo> && cd <repo> && python3 hwbench.py
+A phone is a BETTER venue than a server for this question: mobile
+SoCs are bandwidth- and energy-scarce by construction — exactly the
+conditions spec section 0 is about. Counters come from Android's own
+simpleperf if the OS allows it; stock builds usually don't until you
+run  `adb shell setprop security.perf_harden 0`  from a PC (bytes,
+time and the contended verdict work regardless).
 
 What it does, in order:
   1. compiles native/membench.c (portable C, no dependencies);
@@ -17,20 +27,17 @@ What it does, in order:
   3. measures bytes moved and wall time, single core, at recurrence
      p = 0/50/90/99 (p=0 is the pre-stated falsification case: there
      the grammar is pure overhead and SHOULD lose);
-  4. if `perf` works on this machine, reads the REAL hardware
-     counters (cache misses, instructions, cycles) instead of a
-     simulator;
+  4. reads REAL hardware counters (cache misses, instructions,
+     cycles) via `perf` or Android's `simpleperf` where available;
   5. saturates every core with the memory-bound kernel — the
      bandwidth-scarce condition where traffic should become time —
-     and, if RAPL energy counters are readable, joules too;
+     interleaved ABBA so thermal throttling (phones!) cannot favor
+     either representation; RAPL package joules where readable;
   6. prints an honest verdict for THIS machine and writes
      hwbench-results.json.
 
-Linux gives the full picture (perf + RAPL). macOS/WSL still give
-bytes + time + the contended run — the counters just stay blank.
-If perf is installed but blocked, run:
+If perf is installed but blocked on Linux:
     sudo sysctl kernel.perf_event_paranoid=1
-or rerun this under sudo.
 """
 
 import json
@@ -38,14 +45,22 @@ import os
 import shutil
 import subprocess
 import sys
-import time
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 BIN = os.path.join(ROOT, "native", "membench")
 N = int(sys.argv[1]) if len(sys.argv) > 1 else 4_000_000
 PASSES = 3
 SWEEP = [0, 50, 90, 99]
-EVENTS = ["cache-misses", "cache-references", "instructions", "cycles"]
+EVENTS = ["cache-misses", "cache-references", "instructions", "cycles",
+          "cpu-cycles"]                     # cpu-cycles = simpleperf's name
+
+
+def compiler():
+    for c in (os.environ.get("CC"), "cc", "clang", "gcc"):
+        if c and shutil.which(c):
+            return c
+    sys.exit("no C compiler found — install one (Termux: pkg install clang;"
+             " Debian/Ubuntu: apt install gcc; mac: xcode-select --install)")
 
 
 def run(mode, p, n=N, passes=PASSES, kernel=None):
@@ -57,46 +72,80 @@ def run(mode, p, n=N, passes=PASSES, kernel=None):
 
 
 def cpu_name():
-    try:
+    try:                                    # x86 linux
         for line in open("/proc/cpuinfo"):
             if line.startswith("model name"):
                 return line.split(":", 1)[1].strip()
     except OSError:
         pass
-    try:
-        return subprocess.run(["sysctl", "-n", "machdep.cpu.brand_string"],
-                              capture_output=True, text=True).stdout.strip() \
-            or "unknown CPU"
-    except OSError:
-        return "unknown CPU"
+    for probe in (["getprop", "ro.product.model"],          # android
+                  ["getprop", "ro.soc.model"],
+                  ["sysctl", "-n", "machdep.cpu.brand_string"]):   # mac
+        try:
+            out = subprocess.run(probe, capture_output=True,
+                                 text=True).stdout.strip()
+            if out:
+                return out
+        except OSError:
+            pass
+    return "unknown CPU"
 
 
-def perf_works():
-    if not shutil.which("perf"):
-        return False, "perf not installed (linux-tools / linux-perf package)"
-    r = subprocess.run(["perf", "stat", "-e", "cycles", "--", "true"],
-                       capture_output=True, text=True)
-    if r.returncode != 0 or "cycles" not in r.stderr:
-        return False, ("perf blocked — try: "
-                       "sudo sysctl kernel.perf_event_paranoid=1")
-    return True, ""
+def counter_tool():
+    """Returns (kind, why-not): kind is 'perf', 'simpleperf', or None."""
+    true_bin = shutil.which("true") or "/system/bin/true"
+    if shutil.which("perf"):
+        r = subprocess.run(["perf", "stat", "-e", "cycles", "--", true_bin],
+                           capture_output=True, text=True)
+        if r.returncode == 0 and "cycles" in r.stderr:
+            return "perf", ""
+        return None, ("perf blocked — try: "
+                      "sudo sysctl kernel.perf_event_paranoid=1")
+    sp = shutil.which("simpleperf") or (
+        "/system/bin/simpleperf" if os.path.exists("/system/bin/simpleperf")
+        else None)
+    if sp:
+        r = subprocess.run([sp, "stat", "-e", "cpu-cycles", true_bin],
+                           capture_output=True, text=True)
+        if r.returncode == 0 and "cpu-cycles" in r.stdout + r.stderr:
+            return sp, ""
+        return None, ("simpleperf blocked — from a PC run: "
+                      "adb shell setprop security.perf_harden 0")
+    return None, "no perf/simpleperf (linux-tools package, or Android)"
 
 
-def perf_count(mode, p):
+def counters(tool, mode, p):
     """Real PMU counters over one pass of the heavy kernel."""
-    cmd = ["perf", "stat", "-x", ",", "-e", ",".join(EVENTS), "--",
-           BIN, mode, str(p), str(N), "1"]
-    r = subprocess.run(cmd, capture_output=True, text=True)
     out = {}
-    for line in r.stderr.splitlines():
-        parts = line.split(",")
-        if len(parts) >= 3:
-            ev = parts[2].split(":")[0]    # perf may suffix ':u' non-root
-            if ev in EVENTS:
+    if tool == "perf":
+        cmd = ["perf", "stat", "-x", ",", "-e",
+               "cache-misses,cache-references,instructions,cycles", "--",
+               BIN, mode, str(p), str(N), "1"]
+        r = subprocess.run(cmd, capture_output=True, text=True)
+        for line in r.stderr.splitlines():
+            parts = line.split(",")
+            if len(parts) >= 3:
+                ev = parts[2].split(":")[0]   # perf may suffix ':u' non-root
+                if ev in EVENTS:
+                    try:
+                        out[ev] = int(float(parts[0]))
+                    except ValueError:
+                        pass                  # <not supported>/<not counted>
+    else:                                     # simpleperf path
+        cmd = [tool, "stat", "-e",
+               "cache-misses,cache-references,instructions,cpu-cycles",
+               BIN, mode, str(p), str(N), "1"]
+        r = subprocess.run(cmd, capture_output=True, text=True)
+        for line in (r.stdout + r.stderr).splitlines():
+            toks = line.split()
+            if len(toks) >= 2 and toks[1].split(":")[0] in EVENTS:
                 try:
-                    out[ev] = int(float(parts[0]))
+                    out[toks[1].split(":")[0]] = \
+                        int(toks[0].replace(",", ""))
                 except ValueError:
-                    pass                   # <not supported>/<not counted>
+                    pass
+    if "cycles" not in out and "cpu-cycles" in out:
+        out["cycles"] = out.pop("cpu-cycles")
     return out
 
 
@@ -106,7 +155,7 @@ def rapl_paths():
     found = []
     if os.path.isdir(base):
         for d in sorted(os.listdir(base)):
-            if d.count(":") != 1:          # packages only, not subzones
+            if d.count(":") != 1:             # packages only, not subzones
                 continue
             f = os.path.join(base, d, "energy_uj")
             try:
@@ -121,38 +170,50 @@ def rapl_read(paths):
     return sum(int(open(os.path.join(p, "energy_uj")).read()) for p in paths)
 
 
+def contended_once(mode, p, streams, rapl):
+    e0 = rapl_read(rapl) if rapl else None
+    procs = [subprocess.Popen(
+        [BIN, mode, str(p), str(N), "10", "light"],
+        stdout=subprocess.PIPE, text=True) for _ in range(streams)]
+    secs = []
+    for pr in procs:
+        out, _ = pr.communicate()
+        secs.append(json.loads(out)["seconds"])
+    e1 = rapl_read(rapl) if rapl else None
+    r = dict(seconds=sum(secs) / len(secs))
+    if rapl and e1 >= e0:                     # skip on counter wraparound
+        r["joules"] = (e1 - e0) / 1e6
+    return r
+
+
 def contended(p, streams, rapl):
     """Every core runs the memory-bound kernel at once; kernel-only
-    seconds reported from inside each process. Joules if readable."""
+    seconds from inside each process. ABBA order (raw am am raw), best
+    of the two runs per mode, so thermal drift on phones cannot favor
+    whichever representation happens to run cooler-first."""
+    seq = [contended_once(m, p, streams, rapl)
+           for m in ("raw", "am", "am", "raw")]
     res = {}
-    for mode in ("raw", "am"):
-        e0 = rapl_read(rapl) if rapl else None
-        procs = [subprocess.Popen(
-            [BIN, mode, str(p), str(N), "10", "light"],
-            stdout=subprocess.PIPE, text=True) for _ in range(streams)]
-        secs = []
-        for pr in procs:
-            out, _ = pr.communicate()
-            secs.append(json.loads(out)["seconds"])
-        e1 = rapl_read(rapl) if rapl else None
-        res[mode] = dict(seconds=sum(secs) / len(secs))
-        if rapl and e1 >= e0:              # skip on counter wraparound
-            res[mode]["joules"] = (e1 - e0) / 1e6
+    for mode, a, b in (("raw", seq[0], seq[3]), ("am", seq[1], seq[2])):
+        best = a if a["seconds"] <= b["seconds"] else b
+        res[mode] = best
     return res
 
 
 def main():
-    subprocess.run(["cc", "-O2", "-o", BIN,
+    cc = compiler()
+    subprocess.run([cc, "-O2", "-o", BIN,
                     os.path.join(ROOT, "native", "membench.c")], check=True)
     cores = os.cpu_count() or 1
-    pmu, why = perf_works()
+    tool, why = counter_tool()
     rapl = rapl_paths()
     print("machine: %s, %d cores" % (cpu_name(), cores))
     if N < 2_000_000:
         print("CAUTION: n=%d is small — per-pass times get noise-dominated;"
               " trust the default 4M for the verdict" % N)
     print("counters: %s   energy: %s\n"
-          % ("real PMU via perf" if pmu else "unavailable (%s)" % why,
+          % ("real PMU via %s" % ("perf" if tool == "perf" else "simpleperf")
+             if tool else "unavailable (%s)" % why,
              "RAPL" if rapl else "unavailable"))
 
     rows = []
@@ -164,8 +225,8 @@ def main():
         row = dict(p=p, raw_mb=round(raw["stream_bytes"] / 1e6, 1),
                    am_mb=round(am["stream_bytes"] / 1e6, 1),
                    raw_s=raw["seconds"], am_s=am["seconds"])
-        if pmu:
-            rc, ac = perf_count("raw", p), perf_count("am", p)
+        if tool:
+            rc, ac = counters(tool, "raw", p), counters(tool, "am", p)
             if rc.get("cache-misses") and ac.get("cache-misses") is not None:
                 row["raw_miss"] = rc["cache-misses"]
                 row["am_miss"] = ac["cache-misses"]
@@ -177,8 +238,8 @@ def main():
               % (p, row["raw_mb"], row["am_mb"], row["am_mb"] / row["raw_mb"],
                  row["raw_s"], row["am_s"], row["am_s"] / row["raw_s"], miss))
 
-    print("\nall %d cores, memory-bound kernel (the bandwidth-scarce case):"
-          % cores)
+    print("\nall %d cores, memory-bound kernel (the bandwidth-scarce case), "
+          "ABBA-interleaved:" % cores)
     cont = {}
     for p in (0, 99):
         cont[p] = contended(p, cores, rapl)
@@ -201,19 +262,23 @@ def main():
         print("  cache misses (PMU): %.2fx" % (hi["am_miss"] / hi["raw_miss"]))
     print("  time, 1 core:       %.2fx" % t1)
     print("  time, all cores:    %.2fx  <- the number that decides it" % tc)
-    if tc < 0.95:
+    if tc < 0.90 or t1 < 0.90:
         print("  -> traffic converts to TIME here: this machine is "
-              "bandwidth-bound enough that moving fewer bytes is faster.")
-    elif t1 < 0.95:
-        print("  -> converts even on a single core here.")
+              "bandwidth-bound enough that moving fewer bytes is faster."
+              + ("" if tc < 0.90 else " (even on a single core)"))
+    elif tc < 1.05:
+        print("  -> too close to call on this machine (within run noise): "
+              "the memory system is near the tipping point but the "
+              "prefetcher still mostly keeps up. Joules, if shown above, "
+              "are the tiebreaker.")
     else:
         print("  -> no time conversion on this machine: the prefetcher "
               "hides the raw stream's cost. The bytes/miss win is real "
               "but buys time only where bandwidth or energy is scarce.")
 
     with open(os.path.join(ROOT, "hwbench-results.json"), "w") as f:
-        json.dump(dict(cpu=cpu_name(), cores=cores, n=N, pmu=pmu,
-                       rows=rows,
+        json.dump(dict(cpu=cpu_name(), cores=cores, n=N,
+                       counters=tool or "none", rows=rows,
                        contended={str(k): v for k, v in cont.items()}),
                   f, indent=1)
     print("\n(answers asserted identical at every point; "
