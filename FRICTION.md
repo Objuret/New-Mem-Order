@@ -776,3 +776,43 @@ forbids them (nothing fires uncommanded — including the next iteration).
   by demanding three heads, zero drift across the restart.
 - The audit trail was free: the events chain IS the log, and
   "how many declines" is one tally over it.
+
+---
+
+# Phase 16 — the memory path (2026-07-09)
+
+## 51. The residency mechanism is real in the traffic domain; the time
+## domain belongs to the prefetcher (on this machine)
+
+Chartered by the critique Jocke relayed: nothing had ever measured the
+memory hierarchy — the actual §0 mechanism. Now measured (compiled C,
+same kernel, same logical stream, answers asserted identical; cachegrind
+with a pinned 32K/8M hierarchy; recurrence ratio p swept):
+
+- **Traffic: the claim holds, cleanly.** At p=99, the instruction-form
+  stream is 0.29× the raw bytes and last-level cache misses fall to
+  0.15× (6.7× fewer) — references into an L1-resident template table
+  really do convert recurrence into cache hits. The pre-stated
+  falsification case behaved exactly as predicted: at p=0 the grammar
+  is pure overhead (+13% bytes, +13% misses).
+- **Time: no conversion on this hardware.** Single-threaded, the walk
+  costs 1.1–1.5× wall despite the miss reduction, because a linear scan
+  is the hardware prefetcher's best case — DRAM latency never surfaces,
+  so saved traffic buys no saved time, while varint/tag decoding costs
+  real instructions. Four-core contention on this virtualized box did
+  not saturate bandwidth enough to flip it (~parity at p=99).
+
+The sharp version of the finding: **the conventional world has hardware
+that hides the cost of its own waste for sequential streams.** The
+model's traffic win is real and deterministic; it becomes a TIME win
+only where bandwidth (or energy) is the scarce resource — many cores
+saturating DRAM, NUMA/CXL distance, latency-exposed access patterns,
+or joules-per-bit (bytes moved is the energy proxy; unmeasurable in
+this container). Those conditions exist in real datacenters and are
+exactly §0's "moving a byte costs orders of magnitude more than
+computing on it" — but they could not be produced cleanly in this VM,
+and that limit is recorded rather than papered over.
+
+**Verdict: §0's mechanism confirmed at the traffic level; its
+time-domain payoff is condition-dependent and remains the open
+empirical question for real hardware with PMU access.**

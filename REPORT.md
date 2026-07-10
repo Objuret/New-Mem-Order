@@ -690,6 +690,42 @@ flow, not a computer. Nothing in the spec promises otherwise, and A4
 arguably forbids more: nothing fires uncommanded, including the next
 iteration.
 
+---
+
+# Phase 16 — the memory path (2026-07-09)
+
+Chartered by the relayed critique: the point was always the machine's
+data path — structures resident in cache, traffic as references+values
+— and no phase had measured the memory hierarchy. This one does:
+compiled C, the same task kernel over the same logical records in two
+representations (contiguous raw records vs the real instruction grammar
+with a ~3 KiB L1-resident template table), swept by recurrence ratio p,
+answers asserted identical, misses from cachegrind's pinned 32K/8M
+hierarchy. Reproduce: `python3 phase16.py`.
+
+| p (recurrence) | stream bytes (am/raw) | LL misses per record (am/raw) | wall (am/raw, 1 core) |
+|---|---|---|---|
+| 0% | 1.13× | 1.13× | 1.07× |
+| 50% | 0.70× | 0.71× | 1.16× |
+| 90% | 0.37× | **0.19×** | 1.17× |
+| 99% | **0.29×** | **0.15×** | 1.17× |
+
+**The §0 mechanism is real in the traffic domain**: references into a
+cache-resident table convert recurrence into cache hits — 6.7× fewer
+last-level misses, 3.4× fewer bytes at high recurrence — and the
+pre-stated falsification case behaved as predicted (pure overhead at
+p=0). **It does not convert to wall time on this machine**: a linear
+scan is the prefetcher's best case, so DRAM latency never surfaces and
+the grammar walk's decode overhead dominates; 4-core contention on this
+virtualized box could not saturate bandwidth enough to flip it. The
+honest statement: the conventional world has hardware that hides the
+cost of its own waste for sequential streams; the model's traffic win
+becomes a time (or energy) win only where bandwidth is the scarce
+resource — many-core saturation, NUMA/CXL, latency-exposed patterns,
+joules-per-bit. That conversion is the remaining open empirical
+question, and it needs real hardware with PMU access, not this
+container. FRICTION #51.
+
 ## Reproducing
 
 ```
@@ -708,4 +744,5 @@ python3 phase12.py        # phase 12: the am.tool workflow end to end
 python3 phase13.py        # phase 13: the end-to-end pipeline head-to-head
 python3 phase14.py        # phase 14: amd (native router) + true benchmarks
 python3 phase15.py        # phase 15: a sequential program — branching, state
+python3 phase16.py        # phase 16: the memory path — bytes, misses, time
 ```

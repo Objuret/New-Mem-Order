@@ -79,6 +79,9 @@ python3 phase14.py                            # builds native/amd.c
 # phase 15 — a program: branching + sequential state, zero new structures:
 python3 phase15.py
 
+# phase 16 — the memory path: bytes, cache misses, time (needs valgrind):
+python3 phase16.py                            # builds native/membench.c
+
 # phase 12 — am.tool, the snapshot/replication CLI:
 python3 phase12.py                            # full workflow end to end
 python3 -m am.tool snap DIR --label v1        # then: snaps, ls, cat,
