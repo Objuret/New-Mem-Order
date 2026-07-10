@@ -76,6 +76,9 @@ python3 phase13.py
 # phase 14 — amd: the native router, gated + true benchmarks:
 python3 phase14.py                            # builds native/amd.c
 
+# phase 15 — a program: branching + sequential state, zero new structures:
+python3 phase15.py
+
 # phase 12 — am.tool, the snapshot/replication CLI:
 python3 phase12.py                            # full workflow end to end
 python3 -m am.tool snap DIR --label v1        # then: snaps, ls, cat,

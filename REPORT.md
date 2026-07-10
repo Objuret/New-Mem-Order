@@ -666,6 +666,30 @@ best conventional design because of it. The fix is packing (references
 naming into containers) — a genuine structural question, escalated with
 a recommendation to DECISIONS §2.4, not implemented.
 
+---
+
+# Phase 15 — the compute half: can it run a program? (2026-07-09)
+
+The untested part of the name. Workload: 208 sequential operations on
+an account — approve an order iff it fits in the balance LEFT BY EVERY
+PREVIOUS DECISION, else decline. Branching, two exercised paths
+(41 approve / 159 decline), state over time, an audit trail. Gates: a
+plain-Python reference implementation agrees on every decision and the
+final balance; the processor is killed mid-run and rebuilt from the
+world by demanding three heads, with zero effect. Reproduce:
+`python3 phase15.py`.
+
+**Branching composed from the existing library with ZERO additions**:
+the condition computes as a value (`tally∘pick` → "1"/"0") and selects
+between alternatives that exist as data (`select` over
+"1 approve\n0 decline\n"). The boundary this draws (FRICTION #49): the
+model decides and renders — eagerly, on data, effect-free; the world
+pumps — it maps decided values to emits, sequences firings, and owns
+all loops. A decision-and-rendering engine with world-side control
+flow, not a computer. Nothing in the spec promises otherwise, and A4
+arguably forbids more: nothing fires uncommanded, including the next
+iteration.
+
 ## Reproducing
 
 ```
@@ -683,4 +707,5 @@ python3 phase11.py        # phase 11: native fire loop vs cat, warm and cold
 python3 phase12.py        # phase 12: the am.tool workflow end to end
 python3 phase13.py        # phase 13: the end-to-end pipeline head-to-head
 python3 phase14.py        # phase 14: amd (native router) + true benchmarks
+python3 phase15.py        # phase 15: a sequential program — branching, state
 ```

@@ -735,3 +735,44 @@ the OS's can be rented — while the representation-level deletions
 
 **Verdict: the sharpest external correction of the project**, and it
 came from outside the friction log's own habits.
+
+---
+
+# Phase 15 — the compute half (2026-07-09)
+
+## 49. The model branches on data, the world branches on effects
+
+Conditional logic turned out to be composable from the existing library
+with nothing added: the condition is computed as a value
+(`tally∘pick` → "1"/"0") and SELECTS between alternatives that exist as
+data (`select` over "1 approve\n0 decline\n"). 208 sequentially
+dependent decisions — each depending on the balance left by all
+previous ones — agreed with a plain-Python reference implementation on
+every single one. But the boundary is now exactly drawn:
+
+- the model can DECIDE (branch on data, eagerly — both alternatives are
+  bytes; the untaken one costs its rendering, like SQL CASE or SIMD);
+- the model cannot choose which EFFECT fires: the world receives the
+  decided value and performs the corresponding emits (the pump);
+- the model cannot loop: repetition is either chain-shaped (data) or
+  the world pumping one firing per stroke;
+- derived sequential state must be MATERIALIZED by the pump — a
+  computed decision becomes the next stored literal only through the
+  world, the second-class-references wound in compute clothing.
+
+**Verdict: the name "activation model" is now honestly scoped.** It is
+a decision-and-rendering engine with world-side control flow — a
+programmable calculator with perfect memory, not a computer. Whether
+that boundary is a flaw or the design depends on what Jocke wants the
+model to BE; nothing in the spec promises loops, and A4 arguably
+forbids them (nothing fires uncommanded — including the next iteration).
+
+## 50. What produced zero friction in phase 15
+
+- Branching cost ZERO structures and zero grammar. The falsification
+  bet ("computation shapes balloon the library") failed to trigger on
+  the hardest shape yet.
+- The processor is stateless by construction: killed mid-run, rebuilt
+  by demanding three heads, zero drift across the restart.
+- The audit trail was free: the events chain IS the log, and
+  "how many declines" is one tally over it.
