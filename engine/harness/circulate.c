@@ -66,7 +66,7 @@ typedef void (*fu_fn)(const uint32_t *, const uint64_t *, size_t,
 typedef void (*fh_fn)(const uint32_t *, const uint64_t *, size_t,
                       uint64_t *, uint64_t *, uint64_t *, uint8_t *);
 
-static int emit_baseline(const nmo_tree *trees, uint32_t T,
+static int emit_baseline(const nmo_tree *trees, uint32_t T, int S,
                          const char *dir, void **dl) {
     char cpath[512], so[512], cmd[1200];
     snprintf(cpath, sizeof(cpath), "%s/bl_circ.c", dir);
@@ -74,27 +74,36 @@ static int emit_baseline(const nmo_tree *trees, uint32_t T,
     FILE *o = fopen(cpath, "w");
     if (!o) return -1;
     fprintf(o, "#include <stdint.h>\n#include <stddef.h>\n");
-    for (uint32_t i = 0; i < 3 * T; i++)
+    for (uint32_t i = 0; i < (uint32_t)S * T; i++)
         emit_handler(o, &trees[i], trees[i].tag);
-    for (int st = 0; st < 3; st++) {
+    for (int st = 0; st < S; st++) {
         fprintf(o, "static inline uint64_t d%d(uint32_t t, uint64_t x)"
                    " {\n  switch (t) {\n", st);
         for (uint32_t t = 0; t < T; t++)
-            fprintf(o, "  case %uu: return h%u(x);\n", t, st * T + t);
+            fprintf(o, "  case %uu: return h%u(x);\n", t,
+                    (uint32_t)st * T + t);
         fprintf(o, "  default: return 0;\n  }\n}\n");
     }
+    /* pipeline: S separate passes, S-1 materialized arrays */
     fprintf(o,
         "void bl_pipeline(const uint32_t *tg, const uint64_t *vl,"
-        " size_t n, uint64_t *i1, uint64_t *i2, uint64_t *out) {\n"
-        "  for (size_t i = 0; i < n; i++) i1[i] = d0(tg[i], vl[i]);\n"
-        "  for (size_t i = 0; i < n; i++) i2[i] = d1(tg[i], i1[i]);\n"
-        "  for (size_t i = 0; i < n; i++) out[i] = d2(tg[i], i2[i]);\n"
-        "}\n"
+        " size_t n, uint64_t *i1, uint64_t *i2, uint64_t *out) {\n");
+    for (int st = 0; st < S; st++) {
+        const char *src = st == 0 ? "vl" : (st % 2 ? "i1" : "i2");
+        const char *dst = st == S - 1 ? "out" : (st % 2 ? "i2" : "i1");
+        fprintf(o, "  for (size_t i = 0; i < n; i++) %s[i] ="
+                   " d%d(tg[i], %s[i]);\n", dst, st, src);
+    }
+    fprintf(o, "}\n");
+    fprintf(o,
         "void bl_fused(const uint32_t *tg, const uint64_t *vl,"
         " size_t n, uint64_t *out) {\n"
-        "  for (size_t i = 0; i < n; i++)\n"
-        "    out[i] = d2(tg[i], d1(tg[i], d0(tg[i], vl[i])));\n"
-        "}\n"
+        "  for (size_t i = 0; i < n; i++) {\n"
+        "    uint64_t x = vl[i];\n");
+    for (int st = 0; st < S; st++)
+        fprintf(o, "    x = d%d(tg[i], x);\n", st);
+    fprintf(o, "    out[i] = x;\n  }\n}\n");
+    fprintf(o,
         "static inline uint64_t mx(uint64_t x) { x ^= x >> 33;"
         " x *= 0xFF51AFD7ED558CCDULL; x ^= x >> 33;"
         " x *= 0xC4CEB9FE1A85EC53ULL; return x ^ (x >> 33); }\n"
@@ -104,8 +113,11 @@ static int emit_baseline(const nmo_tree *trees, uint32_t T,
         "  for (size_t i = 0; i < n; i++) {\n"
         "    size_t k = (size_t)tg[i] * 4096 + (mx(vl[i]) & 4095);\n"
         "    if (hu[k] && hk[k] == vl[i]) { out[i] = hv[k]; continue; }\n"
-        "    uint64_t r = d2(tg[i], d1(tg[i], d0(tg[i], vl[i])));\n"
-        "    out[i] = r; hk[k] = vl[i]; hv[k] = r; hu[k] = 1;\n"
+        "    uint64_t x = vl[i];\n");
+    for (int st = 0; st < S; st++)
+        fprintf(o, "    x = d%d(tg[i], x);\n", st);
+    fprintf(o,
+        "    out[i] = x; hk[k] = vl[i]; hv[k] = x; hu[k] = 1;\n"
         "  }\n}\n");
     fclose(o);
     snprintf(cmd, sizeof(cmd), "cc -O2 -shared -fPIC -o %s %s", so, cpath);
@@ -166,6 +178,8 @@ static void run_fh(void *p) {
 int main(int argc, char **argv) {
     const char *trace_dir = argc > 1 ? argv[1] : "traces";
     int reps = argc > 2 ? atoi(argv[2]) : 9;
+    int S = argc > 3 ? atoi(argv[3]) : 3;
+    if (S < 1 || S > 16) return 1;
     const char *dir = getenv("NMO_JIT_DIR");
     if (!dir) dir = "/tmp";
 
@@ -178,29 +192,29 @@ int main(int argc, char **argv) {
     if (nmo_convert_strace(trace_dir, nm, &s) != 0) return 1;
     uint32_t T = s.ntags;
 
-    /* 3-stage chains: entry t -> T+t -> 2T+t -> boundary */
-    nmo_tree *trees = malloc((size_t)3 * T * sizeof(nmo_tree));
-    for (uint32_t t = 0; t < T; t++) {
-        kernel_wired(&trees[t], t, t, T + t);
-        kernel_wired(&trees[T + t], T + t, 0x100000u ^ t, 2 * T + t);
-        kernel_wired(&trees[2 * T + t], 2 * T + t, 0x200000u ^ t,
-                     NMO_EXIT_BOUNDARY);
-    }
+    /* S-stage chains: entry t -> T+t -> ... -> (S-1)T+t -> boundary */
+    nmo_tree *trees = malloc((size_t)S * T * sizeof(nmo_tree));
+    for (uint32_t t = 0; t < T; t++)
+        for (int st = 0; st < S; st++)
+            kernel_wired(&trees[st * T + t], st * T + t,
+                         ((uint32_t)st << 20) ^ t,
+                         st == S - 1 ? NMO_EXIT_BOUNDARY
+                                     : (st + 1) * T + t);
 
     uint64_t *ex = malloc((size_t)(s.n + 8) * 8);
-    nmo_fabric *f = nmo_plant(trees, 3 * T, 3 * T, s.name_span, ex);
+    nmo_fabric *f = nmo_plant(trees, S * T, S * T, s.name_span, ex);
     if (!f) { fprintf(stderr, "plant failed\n"); return 2; }
     double p0 = now_ns();
     if (nmo_pave_all(f, dir, 0) != 0) return 2;
     double paving_ms = (now_ns() - p0) / 1e6;
     /* pure circulation (no matrix) fabric for the ablation column */
     uint64_t *ex2 = malloc((size_t)(s.n + 8) * 8);
-    nmo_fabric *f0 = nmo_plant(trees, 3 * T, 3 * T, 0, ex2);
+    nmo_fabric *f0 = nmo_plant(trees, S * T, S * T, 0, ex2);
     if (!f0 || nmo_pave_all(f0, dir, 0) != 0) return 2;
 
     void *dl;
     p0 = now_ns();
-    if (emit_baseline(trees, T, dir, &dl) != 0) return 2;
+    if (emit_baseline(trees, T, S, dir, &dl) != 0) return 2;
     double bl_build_ms = (now_ns() - p0) / 1e6;
     struct bl_ctx b = { 0 };
     b.pl = (pl_fn)dlsym(dl, "bl_pipeline");
@@ -253,7 +267,7 @@ int main(int argc, char **argv) {
         : opp.max < st_mm.min ? "LOSS" : "INCONCLUSIVE";
 
     printf("{\"circulation\":{\n"
-           " \"stream\":{\"events\":%zu,\"entry_tags\":%u,\"stages\":3,"
+           " \"stream\":{\"events\":%zu,\"entry_tags\":%u,\"stages\":%d,"
            "\"trees\":%u,\"entropy_before\":%.3f,\"entropy_after\":%.3f},\n"
            " \"machine_account\":{"
            "\"circulating\":{\"mean\":%.2f,\"min\":%.2f,\"max\":%.2f},"
@@ -267,10 +281,10 @@ int main(int argc, char **argv) {
            " \"emulation_account\":{\"paving_ms\":%.1f,"
            "\"baseline_build_ms\":%.1f},\n"
            " \"opponent\":\"%s\",\"verdict\":\"%s\"}}\n",
-           s.n, T, 3 * T, s.entropy_before, s.entropy_after,
+           s.n, T, S, S * T, s.entropy_before, s.entropy_after,
            st_m0.mean, st_m0.min, st_m0.max,
            st_mm.mean, st_mm.min, st_mm.max,
-           st_pl.mean, st_pl.min, st_pl.max, (size_t)s.n * 16,
+           st_pl.mean, st_pl.min, st_pl.max, (size_t)s.n * 8 * (S - 1),
            st_fu.mean, st_fu.min, st_fu.max,
            st_fh.mean, st_fh.min, st_fh.max,
            paving_ms, bl_build_ms, opp_name, verdict);
