@@ -814,6 +814,18 @@ days, on the same VM:
 | walk-bound job, all cores (ABBA, 3 repeats) | **0.41–0.45×** |
 | compute-heavy job (fnv1a dominates) | 1.12× |
 
+**Pixel 10 Pro XL rerun (same day, uniform-width refs):** the first
+time-domain win on real silicon — **all-cores contended 0.85×** (was
+1.04× with straddled sids). Single-core diverges from the VM in the
+honest direction: walk-bound 1.45× (VM: 0.46×) because a lone Tensor
+big core gets LPDDR5X bandwidth nearly to itself — bytes are free, so
+the model's extra walk instructions dominate; load all 8 cores and
+bandwidth turns scarce, and the byte win becomes a time win. The
+conversion boundary is now empirically mapped on two machines: the
+model wins time wherever memory bandwidth is contended (shared VM
+core, saturated phone SoC), loses where a fast core has bandwidth to
+spare. Battery energy verdict still pending (needs Termux:API).
+
 **The honest shape of §0's claim, at last:** when moving and
 recognizing data IS the work, the model is ~2.2× faster — single-core
 included; when a heavy task kernel dominates, representation barely
