@@ -156,3 +156,11 @@ It is PRIOR ART, nothing more:
   Next open build directions: fan-out trees (nexits>1 chains), v1
   residency accounting (claim 4 through the fabric), richer payloads
   than u64 at the edge.
+- 2026-07-11, claim 4 via the fabric (engine/results/
+  residency_v1.json): whole-artifact .text both sides, 688 kernels.
+  Machine 99,809B (2.4% of L2, 127.8B/road) vs switch-only loop
+  52,209B - coded INCONCLUSIVE: fits trivially, not smaller. v0's 8x
+  encoding fatness is GONE (hot form is machine code both sides); the
+  residual 1.9x is per-road prologues + table-indirect calls vs one
+  shared switch loop. Remaining open directions: fan-out trees,
+  richer payloads at the edge, the 1.9x residency gap.

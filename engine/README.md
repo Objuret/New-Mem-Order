@@ -43,3 +43,14 @@ required circulation to track fusion at S=1, where a chain has one
 tree and no circulation exists; the condition misfires there and is
 recorded as written, not rewritten after the fact. Every per-depth
 machine verdict is WIN.
+
+Residency, v1 accounting (`results/residency_v1.json`): whole-artifact
+.text both sides, same 688 kernels. Machine resident = 99,809B
+(127.8B/road paved code + road table + shared fabric text) = 2.4% of
+L2; branchy switch-only loop = 52,209B. Coded verdict: INCONCLUSIVE —
+fits L2 trivially but is ~1.9x the branchy bytes (per-road function
+prologues and table-indirect call sequences vs one shared switch
+loop). v0's 8x arrangement-encoding fatness is gone (the hot form is
+machine code on both sides now); the remaining 1.9x is the next
+residency target. Predictor-state half remains unmeasurable, recorded
+as unmeasured.
