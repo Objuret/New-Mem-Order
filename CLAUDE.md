@@ -51,8 +51,20 @@ It is PRIOR ART, nothing more:
    scenery.** They are not an invitation to excavate the old branch.
 
 ## Current state
-- Branch created 2026-07-11: MACHINE.md (the spec) + this file. No
-  engine, no experiments, nothing else exists here yet.
-- Next open item, awaiting Jocke's go and his priority order: the
-  falsifiable claims in MACHINE.md (claim 1, the shape-entropy sweep,
-  is the sharpest and cheapest; claim 5, energy, needs his phone).
+- Branch created 2026-07-11: MACHINE.md (the spec) + this file.
+- 2026-07-11, Jocke's go ("the task is to build this thing"):
+  `claims/claim-1-shape-entropy/` built and run — the shape-entropy
+  sweep, claim discipline throughout (coded verdict, parity-enforced,
+  strongest-baseline comparison, controls). **Coded verdict: PASS** on
+  a virtualized Xeon (wall-time only, no PMU): the staged routed
+  design beats the strongest branchy baseline at every N=2..1024 on
+  uniform streams (1.1-2.1x), loses under low-entropy skew exactly as
+  the claim's regime-bound wording predicts. Two findings that matter
+  for the engine: per-element tag-hops LOSE (routed_direct) — the
+  queue-in-cache + straight-line firing plans are the load-bearing
+  parts; and "widening without bound" was NOT demonstrated — the
+  advantage is bounded and regime-dependent. See that directory's
+  README and results/verdict.json.
+- No engine exists. Claims 2-4 unmeasured; claim 5 needs Jocke's
+  phone. Next structural decisions (engine host form, first niche,
+  claim order) are Jocke's; options written, awaiting his ruling.

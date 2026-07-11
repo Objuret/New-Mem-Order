@@ -92,8 +92,56 @@ M=1000000 REPS=3 ./run.sh   # quicker, noisier
 Outputs: `results/raw.jsonl` (every measurement), `results/verdict.json`
 (coded verdict + tables), `results/environment.txt` (operating point).
 
-## Result
+## Result (run of 2026-07-11, this commit)
 
-See `results/verdict.json` (generated, coded verdict — this README does
-not overrule it). Summary of the run recorded in this commit: see the
-table and verdict in that file.
+**Coded verdict: PASS.** `results/verdict.json` is authoritative; this
+summary does not overrule it.
+
+Median ns/element, uniform tags, L=8, default -O2 (full ranges in
+verdict.json):
+
+| N | branchy_switch | branchy_chain | routed_direct | routed_staged | best-branchy / staged |
+|---|---|---|---|---|---|
+| 2 | 5.52 | 5.33 | 7.63 | **4.87** | 1.09× |
+| 8 | 10.36 | 12.55 | 11.38 | **5.13** | 2.02× |
+| 64 | 11.85 | 23.19 | 12.91 | **8.45** | 1.40× |
+| 256 | 13.27 | 30.81 | 14.24 | **11.32** | 1.17× |
+| 1024 | 15.97 | 43.99 | 16.62 | **11.38** | 1.40× |
+
+Honest readings, including the ones that cut against the design:
+
+1. **The staged design wins at every measured N ≥ 2 with
+   non-overlapping ranges** — there was no branchy-wins region on
+   uniform streams at all, because uniform tags at N=2 are already
+   1 bit/element of branch entropy, which a predictor cannot learn.
+   The predictor-friendly regime is *skewed* traffic, not small N.
+2. **The advantage is not monotone.** It peaks at ~2.1× (N=8–16),
+   dips to ~1.16× (N=256–512) as the staged side starts paying real
+   cache cost for queues + road tables, and recovers to 1.40× at
+   N=1024 as the branchy side's predictor/BTB and icache degrade
+   further. "Widening without bound" is NOT demonstrated; a bounded,
+   regime-dependent advantage is.
+3. **The win survives without SIMD.** In the novec build,
+   staged = 10.51 vs switch = 15.65 ns at N=1024 (1.49×): the
+   advantage is predictability and ceremony-removal, not
+   auto-vectorization.
+4. **The naive routing reading loses.** `routed_direct` (per-element
+   hop through the road table) is slower than the switch at every N —
+   an indirect call per element thrashes the BTB exactly like a jump
+   table does. Tag-routing alone is NOT the win; **staged batch firing
+   is** — the queue-in-cache and the straight-line plans are
+   load-bearing, precisely the layers the prior art never built.
+5. **Low entropy belongs to the predictor, as the machine expects.**
+   Skew control (N=1024 declared, 99% one tag): switch = 3.73,
+   staged = 6.44 ns — branchy wins by 1.73×, and the predictor's full
+   recovery confirms the mechanism attribution. The claim's win is
+   regime-bound exactly as MACHINE.md states it ("where shape-entropy
+   is high").
+6. **Deeper work widens the staged win** (L=32, N=1024: 13.08 vs
+   25.82 ns, ~2×), mostly an icache/locality effect: 1024 deep shapes
+   inlined into one switch is enormous code; per-road plans localize.
+
+What this does and does not establish: one layer's mechanism wins its
+claimed regime on stock hardware, measured, with the losing regime
+mapped. It does not test the composition of the five layers — that
+requires the engine.

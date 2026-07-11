@@ -127,6 +127,14 @@ def main():
             "branchy_switch_ns_at_N1024_uniform": sw_high,
             "branchy_switch_ns_at_N1024_skew": sw_skew,
             "predictor_recovers_under_low_entropy": recovered,
+            "all_variants_at_skew_ns": {
+                v: round(s[(1024, v)]["med"], 3)
+                for v in ("branchy_switch", "branchy_chain",
+                          "routed_direct", "routed_staged")
+                if (1024, v) in s},
+            "note": ("low entropy is branchy territory and the apparatus "
+                     "shows it - the claim's win is regime-bound, exactly "
+                     "as MACHINE.md states it"),
         }
 
     # secondary tables (reported, not gated)

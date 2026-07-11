@@ -1,0 +1,351 @@
+{
+  "claim": "1 - routing beats prediction where shape-entropy is high",
+  "verdict": "PASS",
+  "reason": "crossover at N=2; routed_staged beats the strongest branchy baseline at every N >= 2; advantage ratio grows from 1.09x at crossover to 1.40x at N=1024",
+  "crossover_N": 2,
+  "pmu_counters_available": false,
+  "primary_table_ns_per_elem": {
+    "2": {
+      "branchy_switch": {
+        "med": 5.518,
+        "min": 5.507,
+        "max": 5.566
+      },
+      "branchy_chain": {
+        "med": 5.327,
+        "min": 5.291,
+        "max": 5.431
+      },
+      "branchy_best": "branchy_chain",
+      "routed_direct": {
+        "med": 7.632,
+        "min": 7.619,
+        "max": 7.658
+      },
+      "routed_staged": {
+        "med": 4.869,
+        "min": 4.852,
+        "max": 4.979
+      },
+      "ratio_best_over_staged": 1.094083095438582,
+      "beat": true,
+      "lose": false
+    },
+    "4": {
+      "branchy_switch": {
+        "med": 8.403,
+        "min": 8.345,
+        "max": 8.457
+      },
+      "branchy_chain": {
+        "med": 8.583,
+        "min": 8.563,
+        "max": 8.606
+      },
+      "branchy_best": "branchy_switch",
+      "routed_direct": {
+        "med": 9.918,
+        "min": 9.865,
+        "max": 10.054
+      },
+      "routed_staged": {
+        "med": 4.834,
+        "min": 4.785,
+        "max": 4.936
+      },
+      "ratio_best_over_staged": 1.7383075109116106,
+      "beat": true,
+      "lose": false
+    },
+    "8": {
+      "branchy_switch": {
+        "med": 10.355,
+        "min": 10.23,
+        "max": 10.416
+      },
+      "branchy_chain": {
+        "med": 12.547,
+        "min": 12.447,
+        "max": 12.61
+      },
+      "branchy_best": "branchy_switch",
+      "routed_direct": {
+        "med": 11.384,
+        "min": 11.243,
+        "max": 11.434
+      },
+      "routed_staged": {
+        "med": 5.127,
+        "min": 5.013,
+        "max": 5.282
+      },
+      "ratio_best_over_staged": 2.0196200803526154,
+      "beat": true,
+      "lose": false
+    },
+    "16": {
+      "branchy_switch": {
+        "med": 10.991,
+        "min": 10.97,
+        "max": 11.205
+      },
+      "branchy_chain": {
+        "med": 16.068,
+        "min": 16.023,
+        "max": 16.104
+      },
+      "branchy_best": "branchy_switch",
+      "routed_direct": {
+        "med": 11.803,
+        "min": 11.774,
+        "max": 11.985
+      },
+      "routed_staged": {
+        "med": 5.254,
+        "min": 5.234,
+        "max": 5.362
+      },
+      "ratio_best_over_staged": 2.091734388976648,
+      "beat": true,
+      "lose": false
+    },
+    "32": {
+      "branchy_switch": {
+        "med": 11.346,
+        "min": 11.29,
+        "max": 11.797
+      },
+      "branchy_chain": {
+        "med": 19.346,
+        "min": 19.137,
+        "max": 20.378
+      },
+      "branchy_best": "branchy_switch",
+      "routed_direct": {
+        "med": 12.18,
+        "min": 12.086,
+        "max": 12.353
+      },
+      "routed_staged": {
+        "med": 5.822,
+        "min": 5.707,
+        "max": 6.228
+      },
+      "ratio_best_over_staged": 1.9488148402610788,
+      "beat": true,
+      "lose": false
+    },
+    "64": {
+      "branchy_switch": {
+        "med": 11.854,
+        "min": 11.825,
+        "max": 12.087
+      },
+      "branchy_chain": {
+        "med": 23.195,
+        "min": 23.098,
+        "max": 23.911
+      },
+      "branchy_best": "branchy_switch",
+      "routed_direct": {
+        "med": 12.907,
+        "min": 12.822,
+        "max": 13.64
+      },
+      "routed_staged": {
+        "med": 8.453,
+        "min": 8.166,
+        "max": 8.641
+      },
+      "ratio_best_over_staged": 1.4024394572148544,
+      "beat": true,
+      "lose": false
+    },
+    "128": {
+      "branchy_switch": {
+        "med": 12.614,
+        "min": 12.559,
+        "max": 14.966
+      },
+      "branchy_chain": {
+        "med": 27.162,
+        "min": 26.994,
+        "max": 31.113
+      },
+      "branchy_best": "branchy_switch",
+      "routed_direct": {
+        "med": 13.404,
+        "min": 13.206,
+        "max": 14.128
+      },
+      "routed_staged": {
+        "med": 8.96,
+        "min": 8.791,
+        "max": 9.659
+      },
+      "ratio_best_over_staged": 1.407845982142857,
+      "beat": true,
+      "lose": false
+    },
+    "256": {
+      "branchy_switch": {
+        "med": 13.273,
+        "min": 13.239,
+        "max": 13.633
+      },
+      "branchy_chain": {
+        "med": 30.809,
+        "min": 30.555,
+        "max": 32.43
+      },
+      "branchy_best": "branchy_switch",
+      "routed_direct": {
+        "med": 14.236,
+        "min": 13.848,
+        "max": 14.996
+      },
+      "routed_staged": {
+        "med": 11.316,
+        "min": 11.222,
+        "max": 11.577
+      },
+      "ratio_best_over_staged": 1.172988211173757,
+      "beat": true,
+      "lose": false
+    },
+    "512": {
+      "branchy_switch": {
+        "med": 13.396,
+        "min": 13.314,
+        "max": 13.495
+      },
+      "branchy_chain": {
+        "med": 35.535,
+        "min": 35.438,
+        "max": 35.73
+      },
+      "branchy_best": "branchy_switch",
+      "routed_direct": {
+        "med": 14.88,
+        "min": 14.788,
+        "max": 14.938
+      },
+      "routed_staged": {
+        "med": 11.533,
+        "min": 11.332,
+        "max": 13.017
+      },
+      "ratio_best_over_staged": 1.1615638737871654,
+      "beat": true,
+      "lose": false
+    },
+    "1024": {
+      "branchy_switch": {
+        "med": 15.974,
+        "min": 15.867,
+        "max": 16.687
+      },
+      "branchy_chain": {
+        "med": 43.994,
+        "min": 43.733,
+        "max": 44.32
+      },
+      "branchy_best": "branchy_switch",
+      "routed_direct": {
+        "med": 16.62,
+        "min": 16.494,
+        "max": 17.109
+      },
+      "routed_staged": {
+        "med": 11.38,
+        "min": 11.152,
+        "max": 11.762
+      },
+      "ratio_best_over_staged": 1.4037136630461526,
+      "beat": true,
+      "lose": false
+    }
+  },
+  "branch_misses_per_elem": {},
+  "mechanism_check_skew": {
+    "branchy_switch_ns_at_N2_uniform": 5.518,
+    "branchy_switch_ns_at_N1024_uniform": 15.9737,
+    "branchy_switch_ns_at_N1024_skew": 3.7309,
+    "predictor_recovers_under_low_entropy": true,
+    "all_variants_at_skew_ns": {
+      "branchy_switch": 3.731,
+      "branchy_chain": 6.298,
+      "routed_direct": 3.86,
+      "routed_staged": 6.436
+    },
+    "note": "low entropy is branchy territory and the apparatus shows it - the claim's win is regime-bound, exactly as MACHINE.md states it"
+  },
+  "novec_ns_per_elem": {
+    "2/branchy_chain": 5.576,
+    "2/branchy_switch": 5.787,
+    "2/routed_direct": 7.923,
+    "2/routed_staged": 5.526,
+    "4/branchy_chain": 8.797,
+    "4/branchy_switch": 9.03,
+    "4/routed_direct": 10.172,
+    "4/routed_staged": 5.622,
+    "8/branchy_chain": 12.883,
+    "8/branchy_switch": 10.615,
+    "8/routed_direct": 11.561,
+    "8/routed_staged": 5.74,
+    "16/branchy_chain": 16.602,
+    "16/branchy_switch": 11.345,
+    "16/routed_direct": 12.306,
+    "16/routed_staged": 6.415,
+    "32/branchy_chain": 19.466,
+    "32/branchy_switch": 11.281,
+    "32/routed_direct": 12.296,
+    "32/routed_staged": 6.615,
+    "64/branchy_chain": 23.86,
+    "64/branchy_switch": 12.148,
+    "64/routed_direct": 13.33,
+    "64/routed_staged": 10.325,
+    "128/branchy_chain": 27.3,
+    "128/branchy_switch": 12.566,
+    "128/routed_direct": 13.544,
+    "128/routed_staged": 10.803,
+    "256/branchy_chain": 31.018,
+    "256/branchy_switch": 12.585,
+    "256/routed_direct": 13.67,
+    "256/routed_staged": 10.01,
+    "512/branchy_chain": 36.148,
+    "512/branchy_switch": 14.081,
+    "512/routed_direct": 14.931,
+    "512/routed_staged": 10.125,
+    "1024/branchy_chain": 43.183,
+    "1024/branchy_switch": 15.653,
+    "1024/routed_direct": 16.253,
+    "1024/routed_staged": 10.508
+  },
+  "work_depth_ns_per_elem": {
+    "L2/N2/branchy_chain": 4.738,
+    "L2/N2/branchy_switch": 5.656,
+    "L2/N2/routed_direct": 6.864,
+    "L2/N2/routed_staged": 4.993,
+    "L2/N64/branchy_chain": 21.578,
+    "L2/N64/branchy_switch": 10.762,
+    "L2/N64/routed_direct": 11.597,
+    "L2/N64/routed_staged": 9.725,
+    "L2/N1024/branchy_chain": 37.97,
+    "L2/N1024/branchy_switch": 12.813,
+    "L2/N1024/routed_direct": 12.945,
+    "L2/N1024/routed_staged": 11.716,
+    "L32/N2/branchy_chain": 9.629,
+    "L32/N2/branchy_switch": 9.511,
+    "L32/N2/routed_direct": 12.126,
+    "L32/N2/routed_staged": 9.387,
+    "L32/N64/branchy_chain": 28.956,
+    "L32/N64/branchy_switch": 17.455,
+    "L32/N64/routed_direct": 18.522,
+    "L32/N64/routed_staged": 12.03,
+    "L32/N1024/branchy_chain": 55.245,
+    "L32/N1024/branchy_switch": 25.82,
+    "L32/N1024/routed_direct": 23.302,
+    "L32/N1024/routed_staged": 13.078
+  }
+}
