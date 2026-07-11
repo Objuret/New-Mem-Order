@@ -923,3 +923,65 @@ the correctness gates (cross-language byte identity) — the paranoid,
 mechanical checks — survived the same audit untouched. The lesson is
 structural: identity gates can be self-graded; BASELINES cannot. The
 model did not fight back here; the experimenter did.
+
+## 57. Computation pressure: what fought back and what composed
+
+Phase 19 part A. Ten computation-shaped tasks against the tier,
+compose-first. What fought:
+
+- **Per-element transformation is the eval boundary made concrete.**
+  "Multiply every amount by 7" has no composition; the general answer
+  (apply a sub-instruction per segment) is the forbidden interpreter.
+  The model's only lawful move is one fixed pure structure per VERB
+  (`scale`, sid 13). One verb is cheap; the axis is linear, and that
+  linearity is now the sharpest §6 exposure the experiment has. What
+  saved the phase from a second verb: the weighted-total task's
+  per-record products could ride the WRITE side (chain links holding
+  scale compositions fired at render) — write-side projection again
+  absorbing what read-side composition cannot express.
+- **Free text forced byte-level rewriting.** Segment operations see one
+  delimiter; prose has two. `replace` (sid 12) is honest string
+  machinery, not a parser — but it is the first structure that edits
+  INSIDE segments, and the slope from replace to regex is real and now
+  guarded only by discipline.
+- **Contains-vs-equals (friction #9) finally billed.** Word counting is
+  wrong with substring matching; `pick` grew string-equality ops
+  (seq/sne) — a vocabulary extension, logged as library change.
+- **Ranking pairs strained hardest.** "Top 3 words by count" needs
+  (count, word) sorted by count; with no pad/substring/tuple, the pair
+  had to be ENCODED as count*1000+index (scale+sum), sorted as numbers,
+  and decoded by the demander from the returned values. It works, it is
+  pure, and it is the least natural composition in nineteen phases — a
+  place where the model's value-monism (everything is one byte string)
+  visibly taxes structured intermediate results.
+
+What composed without additions: mean, median, p90, range, histogram,
+count-over, weighted totals — including element-at-index from
+sort/last alone. 8 of 10 tasks, 11 → 13 structures. Sub-linear holds;
+the per-element-verb axis is the recorded threat to it.
+
+## 58. Fused-vs-parts: three of my own handicaps, one false win,
+## one narrow real regime
+
+Phase 19 part B against sqlite+glue at guarantee parity. The first
+three fused losses were MY driver, not the design, and each fix is a
+lesson about what the model's idiom actually is: (1) one connection
+per emit — the idiom is a round of appends as ONE firing; (2) one
+chain link per record — the idiom is one link per ARRIVAL, and here an
+arrival is a batch (creates collapsed 10-400x, wire 17x in the bulky
+regime); (3) queries re-firing whole histories — the idiom is
+write-side registers (phase 8/13), after which queries cost one O(1)
+demand each. Then the trap in the OTHER direction: with all three
+fixed, fused "won" both regimes — because sqlite was paying fsync per
+commit while emit-disk never fsyncs (ERRATA #6). PRAGMA
+synchronous=OFF (same guarantee class) took chatty back: parts win
+~2x where per-round fixed rent (a file per link + head + register,
+O(world) discovery) dominates small batches — friction #48's wall at
+round scale. What survived every correction: **bulk-append
+replication** — one link per big batch, stored bytes = wire bytes =
+queryable form — beats the parts stack on wall (thin: 0.05-0.06 vs
+0.07 s) and on wire decisively (5-6x, monotone in batch size; the
+parts wire is idiomatic JSON — caveat recorded). One regime, narrow,
+real, found on the last day. The general lesson for the record: every
+comparison this project ran was first LOST by a naive driver and only
+then decided by the design — in both directions.

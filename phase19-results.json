@@ -1,0 +1,63 @@
+{
+ "part_a": {
+  "tasks": 10,
+  "new_structures": 2,
+  "extensions": 1,
+  "additions": [
+   "replace (sid 12) <- task 7",
+   "pick op 'seq'/'sne' (vocab ext.) <- task 7",
+   "scale (sid 13) <- task 9"
+  ],
+  "ingest_s": 3.33
+ },
+ "part_b": {
+  "chatty": {
+   "rounds": 40,
+   "per_round": 10,
+   "fused_s": [
+    0.39,
+    0.45,
+    0.45
+   ],
+   "parts_s": [
+    0.19,
+    0.2,
+    0.2
+   ],
+   "fused_wire": 54743,
+   "parts_wire": 61179
+  },
+  "mid": {
+   "rounds": 10,
+   "per_round": 100,
+   "fused_s": [
+    0.1,
+    0.11,
+    0.12
+   ],
+   "parts_s": [
+    0.08,
+    0.08,
+    0.08
+   ],
+   "fused_wire": 33821,
+   "parts_wire": 148881
+  },
+  "bulky": {
+   "rounds": 4,
+   "per_round": 400,
+   "fused_s": [
+    0.05,
+    0.06,
+    0.06
+   ],
+   "parts_s": [
+    0.07,
+    0.07,
+    0.07
+   ],
+   "fused_wire": 45053,
+   "parts_wire": 238870
+  }
+ }
+}

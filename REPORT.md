@@ -895,6 +895,69 @@ compute-bound kernel through a branch-entropy handicap nobody had
 noticed. Phase 16's pinned numbers stand (default sid base = the
 worst case, kept for reproducibility).
 
+# Phase 19 — the sharp test: computation pressure + fused-vs-parts (2026-07-11)
+
+Jocke's charter, verbatim: "put genuinely computation-shaped work (not
+storage-shaped) on it and watch whether the universal tier stays small
+— and find any regime where the fused design beats building the same
+capabilities out of off-the-shelf parts." Post-review discipline
+throughout: coded falsification conditions, ranges over 3 repeats,
+answers asserted identical everywhere. Reproduce: `python3 phase19.py`.
+
+## Part A — ten computation tasks against the tier
+
+Aggregation, order statistics (median/p90 composed via a double
+sort/last suffix trick — element-at-index needs no new structure),
+range, bucketing, exact-match text analytics, per-element
+transformation, weighted reduction. Every answer asserted equal to a
+plain-Python reference. **8 of 10 composed from the existing tier;
+universal tier 11 → 13** (+`replace`, +`scale`, +pick's seq/sne
+string-equality ops as a vocabulary extension) — sub-linear again, and
+the coded falsification condition (additions > 1 per 2 tasks) did not
+fire. The honest exposure it DID find (FRICTION #57): per-element
+VERBS are a linear axis — a generic per-element apply is the forbidden
+eval, so each verb costs one pure structure; `scale` is verb #1, and
+how many verbs real work needs is now the standing §6 question. The
+strain case: ranking (count, word) pairs forced an arithmetic encoding
+(count×1000+index) — pure, correct, and the least natural composition
+in nineteen phases. Native-parity debt: sids 12–13 exist in the Python
+router only.
+
+## Part B — fused vs off-the-shelf parts, honestly refereed
+
+Two nodes, R rounds of append → replicate → query-on-both-sides, over
+real sockets for BOTH stacks. Fused: two amd routers, chains with
+link-per-arrival (a round's batch is one link), write-side registers
+(the model's index idiom, phases 8/13), pipelined ship of the same
+emit-carried moves sync.py makes. Parts: sqlite3 (C, indexed) behind
+TCP, idiomatic JSON row replication, `PRAGMA synchronous=OFF` for
+guarantee-class parity (the model never fsyncs — ERRATA #6; with
+sqlite's default durability ON, fused "won" chatty falsely, and that
+trap is recorded). Answers identical every round, every repeat.
+
+| regime (rounds × recs) | fused wall | parts wall | fused wire | parts wire | verdict |
+|---|---|---|---|---|---|
+| chatty (40×10) | 0.39–0.45 s | **0.19–0.20 s** | 54.7 KB | 61.2 KB | parts |
+| mid (10×100) | 0.10–0.12 s | **0.08 s** | **33.8 KB** | 148.9 KB | parts (thin) |
+| bulky (4×400) | **0.05–0.06 s** | 0.07 s | **45.1 KB** | 238.9 KB | **fused** |
+
+**The regime exists, and it is narrow but real: bulk-append
+replication.** Above ~a few hundred records per round, the fused
+design's structural property — the stored bytes ARE the wire bytes ARE
+the queryable form, so a shipped batch is written once and never
+re-encoded, re-parsed, or re-inserted — beats sqlite-plus-glue on wall
+time (thin margin) and on wire bytes decisively (5–6×, monotone in
+batch size; caveat: the parts wire is idiomatic JSON — a binary row
+protocol would narrow it at the cost of being less off-the-shelf). In
+chatty regimes the parts stack wins ~2×: the model's per-round fixed
+rent (file creates per chain link + head + register, O(world)
+discovery walk) dominates small batches — the rented-store granularity
+wall (FRICTION #48) at round scale. The fused result also needed THREE
+rounds of making its own side idiomatic (batched firings, pipelined
+ship, link-per-arrival) before the comparison was fair — recorded in
+FRICTION #58, because each of those was MY driver being naive, not the
+design.
+
 ## Full-suite verification (2026-07-11)
 
 Every harness rerun end-to-end in the build container, in dependency
@@ -925,5 +988,6 @@ python3 phase13.py        # phase 13: the end-to-end pipeline head-to-head
 python3 phase14.py        # phase 14: amd (native router) + true benchmarks
 python3 phase15.py        # phase 15: a sequential program — branching, state
 python3 phase16.py        # phase 16: the memory path — bytes, misses, time
+python3 phase19.py        # phase 19: computation battery + fused-vs-parts
 python3 phase17.py        # phase 17: amx — the pack engine, gated + clocked
 ```

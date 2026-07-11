@@ -114,3 +114,36 @@ Rejected: 0 recurring blocks seen in only 2 files; 80 admitted-block occurrences
 |---|---|---|---|---|---|
 | 100 | `C1(D,L,L)` | 9 | 2 | 1 | amts/alice-0, amts/alice-1, amts/alice-2 |
 | 101 | `C1(D,L,L,L,L,L,L,L)` | 3 | 3 | 22 | msgs/1783597745001-alice, msgs/1783597745033-bob, msgs/1783597745066-carol |
+
+## Phase 19 — computation pressure (2026-07-11, Jocke's charter)
+
+Ten diverse computation tasks (aggregation, order statistics, text
+analytics, bucketing, per-element transformation, weighted reduction),
+compose-first. Eight of ten composed from the existing tier. Two
+structures and one op-vocabulary extension were forced:
+
+| sid | name | signature | forced by | why composition failed |
+|---|---|---|---|---|
+| 12 | `replace` | (value, old, new) — pure | task 7 (top-3 words) | segment ops see ONE delimiter; free text mixes two ("\n" and " "); no composition changes bytes inside segments |
+| 13 | `scale` | (value, delim, factor) — pure | task 9 (amounts ×k) | per-element arithmetic has no composition; a generic per-element apply would fire sub-instructions (eval — forbidden), so the verb enters as one fixed pure structure |
+| — | `pick` ops `seq`/`sne` | vocabulary extension | task 7 | word counting needs whole-segment equality; select/tally are contains-based (friction #9: "the" must not match "theatre") |
+
+Composed, NOT added (the flattening evidence, continued): mean
+(div∘sum∘tally), median and p90 (double sort/last suffix trick —
+element-at-index composes with no `first` structure), range
+(sub∘sum∘last∘sort — sum-over-one-segment is the scalar-extraction
+bridge for the terminator convention), histogram (nested pick),
+count-over-threshold (tally∘pick), weighted total (write-side zip:
+chain links hold scale compositions the model fires at render),
+top-3 ranking (count-word pairing encoded as count×1000+index via
+scale+sum, sorted numerically, decoded by the demander).
+
+Growth curve: **11 → 13 universal (+1 vocabulary extension) for 10
+computation tasks — sub-linear again.** Standing risk, stated plainly:
+per-element VERBS are a linear axis (`scale` is verb #1; add-constant,
+modulo, clamp would each cost one more). The §6 question under
+computation pressure is now: how many per-element verbs does real work
+need? Unanswered — that is the next falsification pressure.
+
+Native-parity debt: sids 12–13 and the seq/sne ops exist in the Python
+router only; amd/amx refuse them (disclosed, not yet implemented).

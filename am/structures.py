@@ -29,6 +29,8 @@ DIV = 8
 SUB = 9
 PICK = 10
 UNIQ = 11
+REPLACE = 12
+SCALE = 13
 
 # Promoted shapes (phase 4): structure ids >= PROMOTED_BASE are loaded
 # from <root>/lib at router start. A shape body may contain operand-slot
@@ -170,15 +172,49 @@ _CMP = {b"ge": lambda a, b: a >= b, b"gt": lambda a, b: a > b,
 
 
 def _pick(values):
-    # numeric filter; the comparison operator and threshold are VALUES
+    # segment filter; the comparison operator and operand are VALUES.
+    # Numeric ops ge/gt/le/lt/eq (phase 2); string-equality ops seq/sne
+    # added under phase 19's computation charter (LIBRARY.md) -- exact
+    # whole-segment match, closing the contains-vs-equals gap (#9) for
+    # open text without any parser entering the library.
     if len(values) != 4:
-        raise Refusal(b"pick takes (value, delimiter, op, threshold)")
-    hay, delim, op, threshold = values
+        raise Refusal(b"pick takes (value, delimiter, op, operand)")
+    hay, delim, op, operand = values
+    if op in (b"seq", b"sne"):
+        want = op == b"seq"
+        return b"".join(p + delim for p in _segments(hay, delim)
+                        if (p == operand) == want)
     if op not in _CMP:
         raise Refusal(b"pick: unknown op " + op)
-    t = _int(threshold)
+    t = _int(operand)
     return b"".join(p + delim for p in _segments(hay, delim)
                     if _CMP[op](_int(p), t))
+
+
+def _replace(values):
+    # pure byte substitution: (value, old, new), all values. Forced by
+    # phase 19 task 7 (text analytics needs one delimiter regime before
+    # segment ops can see words). No pattern language, no escapes --
+    # literal bytes only.
+    if len(values) != 3:
+        raise Refusal(b"replace takes (value, old, new)")
+    hay, old, new = values
+    if not old:
+        raise Refusal(b"replace: empty old")
+    return hay.replace(old, new)
+
+
+def _scale(values):
+    # per-segment multiply by a constant factor: (value, delim, factor).
+    # Forced by phase 19 task 9; also subsumes scalar multiply (a single
+    # segment times factor). The factor is a VALUE -- one fixed verb, no
+    # sub-instruction ever fires per element (the eval boundary holds).
+    if len(values) != 3:
+        raise Refusal(b"scale takes (value, delimiter, factor)")
+    hay, delim, factor = values
+    k = _int(factor)
+    return b"".join(b"%d" % (_int(p) * k) + delim
+                    for p in _segments(hay, delim))
 
 
 # --- promoted shapes: loading and firing --------------------------------
@@ -272,5 +308,7 @@ def make_registry(world_root):
         DIV: _div,              # pure
         SUB: _sub,              # pure
         PICK: _pick,            # pure
+        REPLACE: _replace,      # pure
+        SCALE: _scale,          # pure
         UNIQ: _uniq,            # pure
     })

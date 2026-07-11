@@ -11,7 +11,7 @@ needs (spec §6).
 | path | what |
 |---|---|
 | `am/instruction.py` | the grammar: one encoder, byte-walking `fire()` — the only form anything has |
-| `am/structures.py` | the library (5 universal structures; log in `LIBRARY.md`) |
+| `am/structures.py` | the library (13 universal structures; log in `LIBRARY.md`) |
 | `am/router.py` | one event loop: receive → resolve → fire whole → return |
 | `am/client.py` | the world side: builds instructions, displays outputs |
 | `am/layer.py` / `am/fuse.py` | phase 3: the FUSE layer — files as chains, reading fires |
@@ -84,6 +84,9 @@ python3 phase16.py                            # builds native/membench.c
 
 # phase 17 — amx: the mmap'd-pack engine, offset references (DECISIONS 2.4):
 python3 phase17.py                            # builds native/amx.c
+
+# phase 19 — computation battery + fused-vs-parts (sqlite) showdown:
+python3 phase19.py
 
 # on YOUR machine — the memory-path experiment with real CPU counters:
 #   any box with a C compiler + python3; perf/simpleperf + RAPL if present
