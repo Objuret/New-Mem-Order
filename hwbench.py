@@ -33,7 +33,11 @@ What it does, in order:
      bandwidth-scarce condition where traffic should become time —
      interleaved ABBA so thermal throttling (phones!) cannot favor
      either representation; RAPL package joules where readable;
-  6. prints an honest verdict for THIS machine and writes
+  6. on a phone running on battery (UNPLUG IT), measures the energy
+     tiebreaker directly: sustained all-core runs of each
+     representation while sampling the battery's own current x
+     voltage, idle baseline subtracted, ABBA order;
+  7. prints an honest verdict for THIS machine and writes
      hwbench-results.json.
 
 If perf is installed but blocked on Linux:
@@ -45,6 +49,8 @@ import os
 import shutil
 import subprocess
 import sys
+import threading
+import time
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 BIN = os.path.join(ROOT, "native", "membench")
@@ -173,6 +179,90 @@ def rapl_read(paths):
     return sum(int(open(os.path.join(p, "energy_uj")).read()) for p in paths)
 
 
+def battery_state():
+    """(path, status) if the battery reports current and voltage
+    (Android exposes this to Termux); status matters: measurements
+    mean something only when Discharging."""
+    for b in ("/sys/class/power_supply/battery",
+              "/sys/class/power_supply/BAT0"):
+        try:
+            abs(int(open(b + "/current_now").read()))
+            int(open(b + "/voltage_now").read())
+            status = open(b + "/status").read().strip()
+            return b, status
+        except (OSError, ValueError):
+            continue
+    return None, None
+
+
+class PowerSampler(threading.Thread):
+    """Samples battery current x voltage at 5 Hz -> mean watts."""
+
+    def __init__(self, base):
+        super().__init__(daemon=True)
+        self.base = base
+        self.samples = []
+        self._stop = threading.Event()
+
+    def run(self):
+        while not self._stop.is_set():
+            try:
+                i = abs(int(open(self.base + "/current_now").read()))
+                v = int(open(self.base + "/voltage_now").read())
+                self.samples.append(i / 1e6 * v / 1e6)   # uA x uV -> W
+            except (OSError, ValueError):
+                pass
+            self._stop.wait(0.2)
+
+    def watts(self):
+        self._stop.set()
+        self.join()
+        return sum(self.samples) / len(self.samples) if self.samples else None
+
+
+def watts_during(base, fn, min_seconds):
+    """Mean battery watts while fn() runs repeatedly for >= min_seconds.
+    Returns (watts, work_done)."""
+    s = PowerSampler(base)
+    s.start()
+    t0 = time.monotonic()
+    work = 0
+    while time.monotonic() - t0 < min_seconds:
+        work += fn()
+    dt = time.monotonic() - t0
+    return s.watts(), work, dt
+
+
+def battery_energy(p, streams, base, block_s=15):
+    """The phone's own energy verdict: sustained all-core runs of each
+    representation while the battery reports drain; idle baseline
+    subtracted; ABBA (raw am am raw) so thermal/battery drift cannot
+    favor either side. Includes stream generation, which is itself
+    bytes-proportional work — labeled, not hidden."""
+
+    def block(mode):
+        def one():
+            procs = [subprocess.Popen(
+                [BIN, mode, str(p), str(N), "10", "light"],
+                stdout=subprocess.PIPE, text=True) for _ in range(streams)]
+            for pr in procs:
+                pr.communicate()
+            return N * 10 * streams
+        return watts_during(base, one, block_s)
+
+    idle_w, _, _ = watts_during(base, lambda: time.sleep(0.5) or 0, 6)
+    runs = [(m,) + block(m) for m in ("raw", "am", "am", "raw")]
+    out = {}
+    for mode, pair in (("raw", (runs[0], runs[3])), ("am", (runs[1], runs[2]))):
+        # joules per billion records, above idle, best (coolest) block
+        js = [(w - idle_w) * dt / (work / 1e9)
+              for _, w, work, dt in pair if w is not None and work]
+        if js:
+            out[mode] = round(min(js), 1)
+    out["idle_w"] = round(idle_w, 2) if idle_w is not None else None
+    return out
+
+
 def contended_once(mode, p, streams, rapl):
     e0 = rapl_read(rapl) if rapl else None
     procs = [subprocess.Popen(
@@ -210,14 +300,16 @@ def main():
     cores = os.cpu_count() or 1
     tool, why = counter_tool()
     rapl = rapl_paths()
+    batt, batt_status = battery_state()
     print("machine: %s, %d cores" % (cpu_name(), cores))
     if N < 2_000_000:
         print("CAUTION: n=%d is small — per-pass times get noise-dominated;"
               " trust the default 4M for the verdict" % N)
+    energy_src = ("RAPL" if rapl else
+                  "battery (%s)" % batt_status if batt else "unavailable")
     print("counters: %s   energy: %s\n"
           % ("real PMU via %s" % ("perf" if tool == "perf" else "simpleperf")
-             if tool else "unavailable (%s)" % why,
-             "RAPL" if rapl else "unavailable"))
+             if tool else "unavailable (%s)" % why, energy_src))
 
     rows = []
     for p in SWEEP:
@@ -254,6 +346,26 @@ def main():
               % (p, r["seconds"], a["seconds"],
                  a["seconds"] / r["seconds"], ej))
 
+    # ---- the energy tiebreaker (battery-powered machines) ------------------
+    energy = {}
+    if not rapl and batt:
+        if batt_status == "Discharging":
+            print("\nbattery energy, all cores, memory-bound kernel "
+                  "(don't touch the phone; ~3 min):")
+            for p in (0, 99):
+                energy[p] = battery_energy(p, cores, batt)
+                e = energy[p]
+                if "raw" in e and "am" in e:
+                    print("p=%3d%%  J/Grec above idle (%.2f W): "
+                          "raw %.1f   am %.1f   (%.2fx)"
+                          % (p, e["idle_w"], e["raw"], e["am"],
+                             e["am"] / e["raw"]))
+                else:
+                    print("p=%3d%%  battery samples unusable" % p)
+        else:
+            print("\nbattery energy: SKIPPED — phone is %s. Unplug it and "
+                  "rerun for the energy verdict." % batt_status.lower())
+
     # ---- the verdict, for THIS machine ------------------------------------
     hi = rows[-1]
     t1 = hi["am_s"] / hi["raw_s"]
@@ -265,6 +377,9 @@ def main():
         print("  cache misses (PMU): %.2fx" % (hi["am_miss"] / hi["raw_miss"]))
     print("  time, 1 core:       %.2fx" % t1)
     print("  time, all cores:    %.2fx  <- the number that decides it" % tc)
+    if 99 in energy and "raw" in energy[99] and "am" in energy[99]:
+        print("  energy (battery):   %.2fx above idle"
+              % (energy[99]["am"] / energy[99]["raw"]))
     if tc < 0.90 or t1 < 0.90:
         print("  -> traffic converts to TIME here: this machine is "
               "bandwidth-bound enough that moving fewer bytes is faster."
@@ -282,7 +397,8 @@ def main():
     with open(os.path.join(ROOT, "hwbench-results.json"), "w") as f:
         json.dump(dict(cpu=cpu_name(), cores=cores, n=N,
                        counters=tool or "none", rows=rows,
-                       contended={str(k): v for k, v in cont.items()}),
+                       contended={str(k): v for k, v in cont.items()},
+                       battery_energy={str(k): v for k, v in energy.items()}),
                   f, indent=1)
     print("\n(answers asserted identical at every point; "
           "results: hwbench-results.json)")

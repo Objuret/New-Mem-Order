@@ -726,6 +726,19 @@ joules-per-bit. That conversion is the remaining open empirical
 question, and it needs real hardware with PMU access, not this
 container. FRICTION #51.
 
+**First real-hardware datapoint (2026-07-11):** Jocke ran the portable
+rig (`hwbench.py`) on a Pixel 10 Pro XL (Tensor G5, 8 cores, LPDDR5X)
+— the bandwidth/energy-constrained class of machine §0 describes.
+Result: bytes 0.29× as everywhere; single-core time 1.38× (worse than
+the Xeon — a faster core makes decode overhead pricier while the
+prefetcher keeps the raw stream free); all-cores contended, the
+penalty shrank 1.31× (p=0) → 1.04× (p=99) — the mechanism visibly
+converging under bandwidth pressure, but reaching parity, not a win.
+The phone's memory system feeds 8 cores on this kernel. Counters and
+RAPL are OS-blocked; the battery-drain energy stage (added to
+hwbench after this run) is the remaining tiebreaker the device can
+measure itself.
+
 ---
 
 # Phase 17 — amx: the engine built FOR the machine (2026-07-10)
