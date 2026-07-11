@@ -117,7 +117,21 @@ It is PRIOR ART, nothing more:
   scaffolding measurements via banners in their READMEs; their run.sh
   harnesses now run lawcheck first and REFUSE while gates fail. Claim
   1 stands as a dispatch-mechanism study (no engine involved; its
-  README already scopes it so). Engine work is FROZEN until a
-  fabric/edge v1 exists that passes lawcheck; the v0 self-review that
-  anticipated these gates is in the conversation record and BUILD-LAW
-  supersedes it.
+  README already scopes it so). Engine work was FROZEN until a
+  fabric/edge v1 existed that passes lawcheck.
+- 2026-07-11, v1 BUILT AND LAWFUL: engine/fabric (arrive + walker,
+  two functions, no manager) + engine/edge (plant/pave/name/channel/
+  convert, all compromises in EMULATION.md) + engine/harness
+  (differential, measure, rematch). lawcheck PASSES all six gates.
+  v0 moved to engine/scaffold-v0, its harnesses retired. The
+  shape-preserving edge (G5) proved v0's flattening: same real
+  traffic = 688 tags / 4.56 bits, not 65 / 3.44.
+- 2026-07-11, niche rematch, LAWFUL WIN: real strace traffic, same
+  kernels both sides (one tree definition), machine 3.11 ns/event vs
+  strongest conventional 4.83 (switch; hash-memo switch 4.91) - coded
+  verdict WIN, ranges disjoint, two ledgers (paving 5.9s/688 roads,
+  convert 0.7us/event in emulation ledger). Ablation recorded: edge +
+  flat loop without fabric = 2.22, so fabric overhead ~0.9ns is the
+  named next target. bl_named-style opponents (consuming the machine's
+  own carried names) are classified as ablations, not baselines - an
+  opponent must be constructible without the machine's edge.

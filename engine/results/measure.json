@@ -1,0 +1,5 @@
+{"stream":{"events":98733,"tags":688,"entropy_before":4.555,"entropy_after":4.555,"name_span":4566},
+ "emulation_account":{"convert_ns_per_event":682.72,"paving_ms":6000.4},
+ "machine_account":[{"cfg":"walker","ns_per_event":{"mean":42.64,"min":42.16,"max":43.01}},{"cfg":"paved","ns_per_event":{"mean":6.81,"min":6.55,"max":7.19}},{"cfg":"paved+matrix","ns_per_event":{"mean":5.13,"min":4.54,"max":6.74}}],
+ "boundary":{"exits":98733,"wire_bytes":449156,"bytes_per_exit":4.55},
+ "g1_dispatch_instructions":27}

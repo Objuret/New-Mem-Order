@@ -6,6 +6,11 @@ cd "$(dirname "$0")"
 # lawcheck first and REFUSES while any gate fails - a number produced
 # under a failing gate would be scaffolding reported as the machine.
 ../../lawcheck.sh || { echo "lawcheck FAIL: Law 0 - harness refuses to measure." >&2; exit 1; }
+# RETIRED: this harness drives the v0 scaffolding API (engine/scaffold-v0).
+# Its recorded results stand as scaffolding data; new numbers require the
+# fabric port. Refusing unconditionally so a gate-passing tree cannot
+# accidentally produce fresh v0 numbers.
+echo "retired: v0 scaffolding harness; fabric port pending" >&2; exit 1
 
 M=${M:-2000000}
 mkdir -p results

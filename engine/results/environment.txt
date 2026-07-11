@@ -1,0 +1,5 @@
+kernel: 6.18.5
+cpu:  Intel(R) Xeon(R) Processor @ 2.80GHz
+gcc: gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+virtualized: docker
+lawcheck: PASS (all six gates) at commit time
