@@ -1,1 +1,5 @@
 claims/*/build/
+engine/*.o
+engine/*.a
+engine/tests/test_engine
+claims/*/bench
