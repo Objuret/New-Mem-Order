@@ -277,3 +277,16 @@ Phase 5 never needed a demand to cross the wire: the sender ships and
 the receiver fires locally. A reference that names another node's world
 would be a structural extension the spec is silent on. No option
 analysis until a workload actually demands it.
+
+### 1.19 (Phase 18) Hot references live in one width band
+LEB128 makes reference width part of the data path: sids straddling a
+varint width boundary turn every hot reference into an unpredictable
+branch (FRICTION #55; 1.9× on the walk). Sid allocation was always
+arbitrary (TMPL_BASE=100 was a constant nobody chose); choosing bands
+by width (e.g. hot templates at 128–16383, all two-byte) is world-side
+engineering of the same kind as 1.15's render cache — no grammar,
+library, or wire change; stores using other allocations stay valid and
+byte-compatible. The shape-recognition fire path (FRICTION #54) is
+recorded as tested-and-rejected at small record sizes; no ruling
+needed for either — both are runtime engineering under existing
+semantics.

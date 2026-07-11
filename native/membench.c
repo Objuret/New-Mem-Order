@@ -25,7 +25,9 @@
  * the swept variable: at p=0 the am form is pure overhead (the honest
  * falsification case), at high p references replace streamed bytes.
  *
- * usage: membench raw|am <p 0..100> <n_records> <passes>
+ * usage: membench raw|am|amc <p 0..100> <n_records> <passes>
+ *   amc = same instruction bytes as am, fired through the
+ *         recognition path (shape plans, decode once per shape)
  * prints one JSON line with stream bytes, seconds (best pass), and the
  * task results (for cross-representation assertion).
  *
@@ -42,7 +44,8 @@
 #define LIT 0x01
 #define COMP 0x02
 #define CONCAT 1
-#define TMPL_BASE 100
+#define TMPL_BASE 100   /* default; override with a trailing numeric arg */
+static int g_base = TMPL_BASE;
 #define N_TMPL 64
 #define NOTE_LEN 48
 #define N_KEYS 8
@@ -101,13 +104,119 @@ static uint64_t xor64(const uint8_t *p, size_t n) {
     return h;
 }
 
+/* ---- the recognition path (mode "amc") ---------------------------------
+ * Arrival = recognition, applied to EXECUTION and not just storage: the
+ * first arrival of a distinct shape is walked generically ONCE and
+ * compiled into a plan — a byte skeleton (values masked out) plus fixed
+ * value offsets. Every later arrival is recognized by one masked
+ * word-compare and its values loaded at fixed offsets, exactly like the
+ * raw walker. Decode cost is per SHAPE, not per record. The plan table
+ * is built from the stream at runtime; nothing about the workload's
+ * shapes is compiled in. */
+
+#define MAX_PLANS 8
+#define MAX_SKEL 80
+
+typedef struct { int off, len, is_tmpl; } slot_t;
+typedef struct { int off; uint64_t skel, mask; } word_t;
+typedef struct {
+    int len, nslots, nwords, tail;
+    uint8_t skel[MAX_SKEL], mask[MAX_SKEL];
+    slot_t slot[8];
+    word_t wordv[MAX_SKEL / 8];   /* structural words only */
+} plan_t;
+
+/* generic grammar walk of one instruction, recording every value span
+   (LIT payload or template-reference sid) as a slot.
+   SOUNDNESS RULE: every length-determining byte stays structural —
+   tags, length varints, argc, and the CONTINUATION BITS of masked sid
+   varints (a masked match must imply the record parses exactly as the
+   plan's skeleton did, so slot offsets and total length are right). */
+static const uint8_t *disc_walk(const uint8_t *p, const uint8_t *r0,
+                                plan_t *pl) {
+    uint8_t tag = *p++;
+    if (tag == LIT) {
+        uint64_t n = get_uv(&p);
+        pl->slot[pl->nslots].off = (int)(p - r0);
+        pl->slot[pl->nslots].len = (int)n;
+        pl->slot[pl->nslots].is_tmpl = 0;
+        pl->nslots++;
+        return p + n;
+    }
+    const uint8_t *sid0 = p;                     /* COMP */
+    uint64_t sid = get_uv(&p);
+    int sid_w = (int)(p - sid0);
+    uint64_t argc = get_uv(&p);
+    if (sid >= (uint64_t)g_base) {               /* resident reference */
+        pl->slot[pl->nslots].off = (int)(sid0 - r0);
+        pl->slot[pl->nslots].len = sid_w;        /* argc stays structural */
+        pl->slot[pl->nslots].is_tmpl = 1;
+        pl->nslots++;
+        return p;
+    }
+    for (uint64_t i = 0; i < argc; i++)
+        p = disc_walk(p, r0, pl);
+    return p;
+}
+
+static int discover(const uint8_t *r, plan_t *pl) {
+    memset(pl, 0, sizeof *pl);
+    const uint8_t *e = disc_walk(r, r, pl);
+    pl->len = (int)(e - r);
+    if (pl->len > MAX_SKEL || pl->nslots < 1 || pl->nslots > 8) return -1;
+    memcpy(pl->skel, r, pl->len);
+    memset(pl->mask, 0xFF, pl->len);
+    for (int s = 0; s < pl->nslots; s++) {
+        int a = pl->slot[s].off;
+        int b = a + pl->slot[s].len;
+        for (int i = a; i < b && i < pl->len; i++)
+            /* sid bytes: payload bits vary, continuation bit is length
+               and must match; LIT payload bytes: fully value */
+            pl->mask[i] = pl->slot[s].is_tmpl ? 0x80 : 0x00;
+    }
+    for (int i = 0; i < pl->len; i++) pl->skel[i] &= pl->mask[i];
+    /* compact: recognition compares only words that carry structure */
+    pl->tail = pl->len & ~7;
+    for (int i = 0; i + 8 <= pl->len; i += 8) {
+        uint64_t s, m;
+        memcpy(&s, pl->skel + i, 8);
+        memcpy(&m, pl->mask + i, 8);
+        if (m) {
+            pl->wordv[pl->nwords].off = i;
+            pl->wordv[pl->nwords].skel = s;
+            pl->wordv[pl->nwords].mask = m;
+            pl->nwords++;
+        }
+    }
+    return 0;
+}
+
+static int plan_match(const plan_t *pl, const uint8_t *r,
+                      const uint8_t *end) {
+    if (r + pl->len > end) return 0;
+    for (int k = 0; k < pl->nwords; k++) {
+        uint64_t b;
+        memcpy(&b, r + pl->wordv[k].off, 8);
+        if ((b & pl->wordv[k].mask) != pl->wordv[k].skel) return 0;
+    }
+    for (int i = pl->tail; i < pl->len; i++)
+        if ((r[i] & pl->mask[i]) != pl->skel[i]) return 0;
+    return 1;
+}
+
 int main(int argc, char **argv) {
-    if (argc != 5 && argc != 6) {
-        fprintf(stderr, "usage: membench raw|am <p> <n> <passes> [light]\n");
+    if (argc < 5 || argc > 7) {
+        fprintf(stderr, "usage: membench raw|am|amc <p> <n> <passes>"
+                        " [light] [sid_base]\n");
         return 1;
     }
-    int light = argc == 6;   /* light kernel: memory-dominant (8B xor loads) */
-    int is_am = !strcmp(argv[1], "am");
+    int light = 0;           /* light kernel: memory-dominant (8B xor loads) */
+    for (int i = 5; i < argc; i++) {
+        if (!strcmp(argv[i], "light")) light = 1;
+        else g_base = atoi(argv[i]);   /* e.g. 128 = uniform 2-byte sids */
+    }
+    int amc = !strcmp(argv[1], "amc");   /* recognition path */
+    int is_am = amc || !strcmp(argv[1], "am");   /* same stream bytes */
     int p = atoi(argv[2]);
     long n = atol(argv[3]);
     int passes = atoi(argv[4]);
@@ -141,7 +250,7 @@ int main(int argc, char **argv) {
             *w++ = LIT; put_uv(&w, 1); *w++ = key;
             *w++ = LIT; put_uv(&w, 4); memcpy(w, &amount, 4); w += 4;
             if (recurring) {
-                *w++ = COMP; put_uv(&w, TMPL_BASE + tmpl); put_uv(&w, 0);
+                *w++ = COMP; put_uv(&w, g_base + tmpl); put_uv(&w, 0);
             } else {
                 *w++ = LIT; put_uv(&w, NOTE_LEN);
                 memcpy(w, note, NOTE_LEN); w += NOTE_LEN;
@@ -172,6 +281,46 @@ int main(int argc, char **argv) {
                                   : fnv1a(r, len, 0xcbf29ce484222325ULL);
                 r += len;
             }
+        } else if (amc) {
+            /* recognition path: same bytes as "am", decode per shape */
+            plan_t plans[MAX_PLANS];
+            int nplans = 0;
+            while (r < end) {
+                plan_t *pl = NULL;
+                for (int i = 0; i < nplans; i++)
+                    if (plan_match(&plans[i], r, end)) { pl = &plans[i]; break; }
+                if (!pl) {
+                    if (nplans == MAX_PLANS ||
+                            discover(r, &plans[nplans]) != 0) {
+                        fprintf(stderr, "amc: unplannable record\n");
+                        return 1;
+                    }
+                    pl = &plans[nplans++];
+                }
+                uint8_t key = r[pl->slot[0].off];
+                uint32_t amount;
+                memcpy(&amount, r + pl->slot[1].off, 4);
+                sums[key] += amount;
+                const slot_t *ns = &pl->slot[2];
+                if (ns->is_tmpl) {
+                    const uint8_t *q = r + ns->off;
+                    uint64_t sid = get_uv(&q);
+                    if (sid < (uint64_t)g_base ||
+                            sid >= (uint64_t)(g_base + N_TMPL)) {
+                        fprintf(stderr, "amc: sid out of range\n");
+                        return 1;
+                    }
+                    checksum ^= light
+                        ? xor64(g_tmpl[sid - g_base], NOTE_LEN)
+                        : fnv1a(g_tmpl[sid - g_base], NOTE_LEN,
+                                0xcbf29ce484222325ULL);
+                } else {
+                    checksum ^= light ? xor64(r + ns->off, ns->len)
+                                      : fnv1a(r + ns->off, ns->len,
+                                              0xcbf29ce484222325ULL);
+                }
+                r += pl->len;
+            }
         } else {
             while (r < end) {
                 r++; get_uv(&r); get_uv(&r);      /* COMP concat argc=3 */
@@ -185,8 +334,8 @@ int main(int argc, char **argv) {
                 if (tag == COMP) {                 /* resident template ref */
                     uint64_t sid = get_uv(&r); get_uv(&r);
                     checksum ^= light
-                        ? xor64(g_tmpl[sid - TMPL_BASE], NOTE_LEN)
-                        : fnv1a(g_tmpl[sid - TMPL_BASE], NOTE_LEN,
+                        ? xor64(g_tmpl[sid - g_base], NOTE_LEN)
+                        : fnv1a(g_tmpl[sid - g_base], NOTE_LEN,
                                 0xcbf29ce484222325ULL);
                 } else {                           /* unique note inline */
                     uint64_t len = get_uv(&r);

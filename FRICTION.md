@@ -855,3 +855,48 @@ into the recursive fire function, making each chain link cost ~9 KB of
 stack (segfault past ~1,200 links). Keeping them out of the recursive
 frame (noinline) put the frame at 256 bytes, so the MAX_DEPTH refusal
 fires long before the stack can — a refusal, never a crash.
+
+## 54. The fire loop never used recognition — caught by Jocke
+
+Phase 18, chartered by "wait, you never use cached shapes?" — correct,
+and the miss was structural: recurrence was exploited for BYTES
+everywhere (condensation, shape promotion, resident templates — the
+storage, wire and cache-traffic wins) while every engine decoded each
+ARRIVING instruction generically, byte by byte, ten million identical
+decodes for ten million arrivals of one shape. "Arrival = recognition"
+had been implemented for representation and never for execution. The
+answer built and measured (`membench` mode `amc`): first arrival of a
+shape compiles a plan (byte skeleton with values masked, fixed value
+offsets), later arrivals match by masked word-compare and load at
+offsets like the raw walker. Gated byte-identical at every recurrence
+ratio. RESULT, honestly: at this workload's 3-field/15-byte records it
+LOSES to generic decode (0.19 s vs 0.17 s at p=99) — a tiny record with
+predictable branches decodes in ~10 cycles and the plan dispatch costs
+more than it saves. Kept in the tree as the tested-and-rejected path;
+the scaling hypothesis (wide shapes: decode grows, recognition stays
+two compares) is stated, untested. The hunt for where the overhead
+ACTUALLY lives produced #55, which is worth more.
+
+## 55. Reference width entropy: the coin-flip branch, and the first
+## time-domain wins
+
+Found decomposing #54's numbers. The bench template sids (100–163)
+straddle the LEB128 one/two-byte boundary, so the WIDTH of every hot
+reference is a per-record coin flip — an unpredictable branch that
+flushes the pipeline mid-walk. Allocating hot sids in one width band
+(base 128: all two-byte — one trailing arg, zero grammar change) made
+the walk-dominant kernel **1.9× faster** at p=99. With that fixed, on
+the same VM that had refused a time win for two days:
+
+- walk-bound job, ONE core:   am 0.46× of raw (2.2× faster)
+- walk-bound job, all cores:  am 0.44× of raw (stable, ABBA, 3 repeats)
+- compute-heavy job (fnv1a):  am 1.12× — representation barely matters
+  when the task kernel dominates, exactly as §0 would predict.
+
+Two findings in one: (1) §0's traffic win DOES convert to time — in
+the regime where data movement is the work, and even single-core; the
+earlier "no conversion" verdicts were measuring a compute-bound kernel
+through a branch-entropy handicap. (2) Reference ALLOCATION is a real
+world-side performance discipline: hot resident structures deserve a
+uniform-width sid band (DECISIONS 1.19). Phase 16's pinned baselines
+stand unchanged (default base 100 = the honest worst case).

@@ -783,6 +783,45 @@ the conventional stream is latency floor, not bytes (FRICTION #52).
 Universal tier 11 → 11; grammar and wire untouched — the entire change
 lives in reference resolution, which is what §2.4 claimed it would be.
 
+# Phase 18 — the recognition path, and what it flushed out (2026-07-11)
+
+Chartered by Jocke's "wait, you never use cached shapes?" — correct
+(FRICTION #54): recurrence powered every BYTE win while every engine
+decoded each arriving instruction generically, per record, forever.
+Two things were built and measured (`membench` modes; `hwbench.py`
+reports all of it on any machine):
+
+**1. The recognition fire path (`amc`)** — first arrival of a shape
+compiles a plan (masked byte skeleton + fixed value offsets); later
+arrivals match by word-compare and load like the raw walker. Gated
+byte-identical at every recurrence ratio. **Rejected by the data at
+this record size**: 3-field/15-byte records decode in ~10 predictable
+cycles and the plan dispatch costs more than it saves (0.19 s vs
+0.17 s at p=99). Recorded as the tested-and-rejected path; the
+wide-shape scaling hypothesis stays open.
+
+**2. Reference width entropy (FRICTION #55)** — found chasing #54's
+numbers: template sids 100–163 straddle the LEB128 width boundary, so
+every hot reference's LENGTH was a per-record coin-flip branch.
+Allocating hot sids in one width band (all two-byte; zero grammar
+change, DECISIONS 1.19) made the walk-dominant kernel 1.9× faster —
+and flipped the time verdict this project had failed to flip for two
+days, on the same VM:
+
+| p=99, uniform-width refs | am / raw |
+|---|---|
+| walk-bound job, 1 core | **0.46×** |
+| walk-bound job, all cores (ABBA, 3 repeats) | **0.41–0.45×** |
+| compute-heavy job (fnv1a dominates) | 1.12× |
+
+**The honest shape of §0's claim, at last:** when moving and
+recognizing data IS the work, the model is ~2.2× faster — single-core
+included; when a heavy task kernel dominates, representation barely
+matters. The prior "no time conversion" verdicts were measuring a
+compute-bound kernel through a branch-entropy handicap nobody had
+noticed. Phase 16's pinned numbers stand (default sid base = the
+worst case, kept for reproducibility).
+
 ## Reproducing
 
 ```

@@ -69,10 +69,16 @@ def compiler():
              " Debian/Ubuntu: apt install gcc; mac: xcode-select --install)")
 
 
-def run(mode, p, n=N, passes=PASSES, kernel=None):
+UNIFORM_BASE = "128"   # hot-template sids in one LEB128 width band
+                       # (uniform 2-byte refs: no width branch per record)
+
+
+def run(mode, p, n=N, passes=PASSES, kernel=None, base=None):
     cmd = [BIN, mode, str(p), str(n), str(passes)]
     if kernel:
         cmd.append(kernel)
+    if base:
+        cmd.append(base)
     r = subprocess.run(cmd, capture_output=True, text=True, check=True)
     return json.loads(r.stdout)
 
@@ -288,7 +294,7 @@ def battery_energy(p, streams, reader, interval, block_s=15):
     def block(mode):
         def one():
             procs = [subprocess.Popen(
-                [BIN, mode, str(p), str(N), "10", "light"],
+                [BIN, mode, str(p), str(N), "10", "light", UNIFORM_BASE],
                 stdout=subprocess.PIPE, text=True) for _ in range(streams)]
             for pr in procs:
                 pr.communicate()
@@ -314,7 +320,7 @@ def battery_energy(p, streams, reader, interval, block_s=15):
 def contended_once(mode, p, streams, rapl):
     e0 = rapl_read(rapl) if rapl else None
     procs = [subprocess.Popen(
-        [BIN, mode, str(p), str(N), "10", "light"],
+        [BIN, mode, str(p), str(N), "10", "light", UNIFORM_BASE],
         stdout=subprocess.PIPE, text=True) for _ in range(streams)]
     secs = []
     for pr in procs:
@@ -366,11 +372,15 @@ def main():
     for p in SWEEP:
         raw = run("raw", p)
         am = run("am", p)
-        assert (raw["sum"], raw["checksum"]) == (am["sum"], am["checksum"]), \
+        amt = run("am", p, base=UNIFORM_BASE)
+        amc = run("amc", p, base=UNIFORM_BASE)
+        assert (raw["sum"], raw["checksum"]) == (am["sum"], am["checksum"]) \
+            == (amt["sum"], amt["checksum"]) == (amc["sum"], amc["checksum"]), \
             "representations disagree at p=%d" % p
         row = dict(p=p, raw_mb=round(raw["stream_bytes"] / 1e6, 1),
                    am_mb=round(am["stream_bytes"] / 1e6, 1),
-                   raw_s=raw["seconds"], am_s=am["seconds"])
+                   raw_s=raw["seconds"], am_s=am["seconds"],
+                   amt_s=amt["seconds"], amc_s=amc["seconds"])
         if tool:
             rc, ac = counters(tool, "raw", p), counters(tool, "am", p)
             if rc.get("cache-misses") and ac.get("cache-misses") is not None:
@@ -379,10 +389,11 @@ def main():
         rows.append(row)
         miss = ("   misses: %.2fx" % (row["am_miss"] / row["raw_miss"])
                 if row.get("raw_miss") else "")
-        print("p=%3d%%  bytes: %6.1f -> %6.1f MB (%.2fx)   "
-              "time 1-core: %.3f -> %.3f s (%.2fx)%s"
+        print("p=%3d%%  bytes: %6.1f -> %6.1f MB (%.2fx)   1-core s: "
+              "raw %.3f  am %.3f (%.2fx)  am/uniform-refs %.3f (%.2fx)%s"
               % (p, row["raw_mb"], row["am_mb"], row["am_mb"] / row["raw_mb"],
-                 row["raw_s"], row["am_s"], row["am_s"] / row["raw_s"], miss))
+                 row["raw_s"], row["am_s"], row["am_s"] / row["raw_s"],
+                 row["amt_s"], row["amt_s"] / row["raw_s"], miss))
 
     print("\nall %d cores, memory-bound kernel (the bandwidth-scarce case), "
           "ABBA-interleaved:" % cores)
@@ -418,21 +429,32 @@ def main():
             print("\nbattery energy: SKIPPED — phone is %s. Unplug it and "
                   "rerun for the energy verdict." % batt_status.lower())
 
-    # ---- the verdict, for THIS machine ------------------------------------
+    # ---- the recognition path, reported ------------------------------------
     hi = rows[-1]
-    t1 = hi["am_s"] / hi["raw_s"]
+    print("\nrecognition path (amc, decode once per shape): %.3f s at p=99 "
+          "vs %.3f generic — %s at this 3-field record size"
+          % (hi["amc_s"], hi["amt_s"],
+             "wins" if hi["amc_s"] < hi["amt_s"] * 0.97 else
+             "no win" if hi["amc_s"] < hi["amt_s"] * 1.03 else "loses"))
+
+    # ---- the verdict, for THIS machine ------------------------------------
+    lr = run("raw", 99, kernel="light")
+    la = run("am", 99, kernel="light", base=UNIFORM_BASE)
+    tw = la["seconds"] / lr["seconds"]
+    t1 = hi["amt_s"] / hi["raw_s"]
     tc = cont[99]["am"]["seconds"] / cont[99]["raw"]["seconds"]
     print("\nverdict for this machine at p=99 (high recurrence):")
     print("  bytes moved:        %.2fx (deterministic — the model's floor)"
           % (hi["am_mb"] / hi["raw_mb"]))
     if hi.get("raw_miss"):
         print("  cache misses (PMU): %.2fx" % (hi["am_miss"] / hi["raw_miss"]))
-    print("  time, 1 core:       %.2fx" % t1)
+    print("  time, 1 core:       %.2fx compute-heavy job   %.2fx"
+          " walk-bound job" % (t1, tw))
     print("  time, all cores:    %.2fx  <- the number that decides it" % tc)
     if 99 in energy and "raw" in energy[99] and "am" in energy[99]:
         print("  energy (battery):   %.2fx above idle"
               % (energy[99]["am"] / energy[99]["raw"]))
-    if tc < 0.90 or t1 < 0.90:
+    if tc < 0.90 or t1 < 0.90 or tw < 0.90:
         print("  -> traffic converts to TIME here: this machine is "
               "bandwidth-bound enough that moving fewer bytes is faster."
               + ("" if tc < 0.90 else " (even on a single core)"))
@@ -449,6 +471,8 @@ def main():
     with open(os.path.join(ROOT, "hwbench-results.json"), "w") as f:
         json.dump(dict(cpu=cpu_name(), cores=cores, n=N,
                        counters=tool or "none", rows=rows,
+                       walk_bound_1core=dict(raw_s=lr["seconds"],
+                                             am_s=la["seconds"]),
                        contended={str(k): v for k, v in cont.items()},
                        battery_energy={str(k): v for k, v in energy.items()}),
                   f, indent=1)
