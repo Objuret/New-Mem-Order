@@ -145,3 +145,14 @@ It is PRIOR ART, nothing more:
   plant's transitive single-exit analysis; cycles rejected at plant)
   1.97 vs strongest conventional fused+hash-memo 3.82: WIN, trimmed
   ranges disjoint. Layers 4+5 now pay together, lawfully.
+- 2026-07-11, depth sweep S=1,2,4,8 (engine/results/
+  circulate_depth_verdict.json): full machine WINS at every depth and
+  is depth-FLAT (3.0-3.3 ns/event) while every opponent scales with S
+  (pipeline to 42.5, fused to 34.6). Pure circulation beats compiled
+  fusion at every S>=2; pipeline/circulation ratio grows monotonically
+  0.78x->1.98x. Composite coded verdict INCONCLUSIVE kept as coded:
+  the pre-coded fusion-tracking condition misfires at S=1 (single
+  tree, no circulation exists); documented, not rewritten post hoc.
+  Next open build directions: fan-out trees (nexits>1 chains), v1
+  residency accounting (claim 4 through the fabric), richer payloads
+  than u64 at the edge.
