@@ -65,6 +65,19 @@ It is PRIOR ART, nothing more:
   parts; and "widening without bound" was NOT demonstrated — the
   advantage is bounded and regime-dependent. See that directory's
   README and results/verdict.json.
-- No engine exists. Claims 2-4 unmeasured; claim 5 needs Jocke's
-  phone. Next structural decisions (engine host form, first niche,
-  claim order) are Jocke's; options written, awaiting his ruling.
+- 2026-07-11, Jocke: "Build it fully." THE ENGINE now exists:
+  `engine/` — all five layers as an embeddable runtime (fixed 16-op
+  vocabulary; validated arrangements; tag-indexed road table; paving
+  on first arrival, to slotted plans and optionally to real machine
+  code via cc+dlopen; batch circulation with liveness-dying
+  intermediates; exits-only with result matrix, naming, channels).
+  Differential tests: walker/plan/jit bit-identical on random
+  arrangements. Claims measured through it: **claim 2 PASS**
+  (circulation 1.5-3.2x over stepping, jit roads ~9x, advantage grows
+  with depth), **claim 3 PASS** (traffic ratio = intermediates/exits,
+  128x with recurrence, decode-verified), **claim 4 INCONCLUSIVE —
+  real finding**: v0 arrangement encoding is ~8x fatter per op than
+  branchy code (fits L2, but doesn't beat compiled code on bytes;
+  packing is the named target). Claim 5 still needs Jocke's phone.
+- Measured to date: claims 1, 2, 3 PASS; 4 open on representation
+  fatness; 5 blocked on hardware. All verdicts coded, none narrated.

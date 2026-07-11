@@ -1,0 +1,15 @@
+{
+  "claim": "4 - arrangement-residency fits",
+  "verdict": "INCONCLUSIVE",
+  "reason": "fits L2 (570325B) but not smaller than branchy .text (69303B)",
+  "unmeasured": "predictor/BTB state (hardware-internal; the claim's 'cannot fit' clause is not scored)",
+  "network_bytes": 561152,
+  "engine_text_bytes": 9173,
+  "bytes_per_road": 548.0,
+  "branchy_text_bytes": 69303,
+  "l2_bytes": 4194304,
+  "state_bytes_note": {
+    "value": 8388608,
+    "meaning": "queues + register files + jit landing zones - working state, sized by batch config, not part of the road network"
+  }
+}

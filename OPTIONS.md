@@ -1,9 +1,15 @@
-# OPEN DECISIONS — options written, nothing implemented (working rule 2)
+# OPEN DECISIONS — options + recommendations (working rule 2)
 
-Status as of 2026-07-11, after claim 1 PASSED its sweep. Each item
-below is a structural silence in MACHINE.md. Options and a
-recommendation are given; **no option is being built until Jocke
-rules.** Rulings can be one line each ("1b, 2a, 3a, 4 yes").
+2026-07-11, Jocke: "Build it fully." Taken as ratifying the
+recommendations below: items 1 (claims 2-4, in that order) and 2
+(engine as embeddable runtime, 2a) are now BUILT — engine in
+`engine/`, measurements in `claims/`. Item 3 (niche) is the standing
+direction for what the engine gets pointed at next. Item 4 remains
+genuinely open: it is a spec ratification and only Jocke can close it.
+
+---
+
+Original options as written after claim 1, kept for the record:
 
 ## 1. Order of the remaining falsifiable claims
 

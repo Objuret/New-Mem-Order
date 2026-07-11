@@ -1,0 +1,134 @@
+{
+  "claim": "2 - circulation beats program-mediated stepping",
+  "verdict": "PASS",
+  "reason": "circulation beats stepping at every depth 4..120 with non-overlapping ranges; advantage grows from 1.49x to 3.15x (jit: 8.80x)",
+  "accounting": "wall-time only (no PMU/joules on this host)",
+  "table_ns_per_elem": {
+    "4": {
+      "walker": {
+        "med": 19.891,
+        "min": 19.298,
+        "max": 26.118
+      },
+      "plan": {
+        "med": 13.373,
+        "min": 12.44,
+        "max": 16.571
+      },
+      "jit": {
+        "med": 9.099,
+        "min": 8.738,
+        "max": 11.43
+      },
+      "ratio_walker_over_plan": 1.487,
+      "ratio_walker_over_jit": 2.186,
+      "beat": 1,
+      "lose": 0
+    },
+    "8": {
+      "walker": {
+        "med": 34.746,
+        "min": 33.434,
+        "max": 35.208
+      },
+      "plan": {
+        "med": 16.53,
+        "min": 16.294,
+        "max": 17.018
+      },
+      "jit": {
+        "med": 9.335,
+        "min": 9.104,
+        "max": 9.487
+      },
+      "ratio_walker_over_plan": 2.102,
+      "ratio_walker_over_jit": 3.722,
+      "beat": 1,
+      "lose": 0
+    },
+    "16": {
+      "walker": {
+        "med": 58.525,
+        "min": 57.344,
+        "max": 59.052
+      },
+      "plan": {
+        "med": 24.42,
+        "min": 23.972,
+        "max": 25.292
+      },
+      "jit": {
+        "med": 10.729,
+        "min": 10.551,
+        "max": 11.051
+      },
+      "ratio_walker_over_plan": 2.397,
+      "ratio_walker_over_jit": 5.455,
+      "beat": 1,
+      "lose": 0
+    },
+    "32": {
+      "walker": {
+        "med": 114.109,
+        "min": 113.103,
+        "max": 120.191
+      },
+      "plan": {
+        "med": 40.998,
+        "min": 39.508,
+        "max": 44.386
+      },
+      "jit": {
+        "med": 14.787,
+        "min": 14.586,
+        "max": 14.834
+      },
+      "ratio_walker_over_plan": 2.783,
+      "ratio_walker_over_jit": 7.717,
+      "beat": 1,
+      "lose": 0
+    },
+    "64": {
+      "walker": {
+        "med": 213.442,
+        "min": 210.728,
+        "max": 215.205
+      },
+      "plan": {
+        "med": 71.514,
+        "min": 69.859,
+        "max": 72.578
+      },
+      "jit": {
+        "med": 23.856,
+        "min": 23.538,
+        "max": 24.223
+      },
+      "ratio_walker_over_plan": 2.985,
+      "ratio_walker_over_jit": 8.947,
+      "beat": 1,
+      "lose": 0
+    },
+    "120": {
+      "walker": {
+        "med": 393.237,
+        "min": 389.083,
+        "max": 406.532
+      },
+      "plan": {
+        "med": 124.967,
+        "min": 123.843,
+        "max": 128.224
+      },
+      "jit": {
+        "med": 44.687,
+        "min": 43.83,
+        "max": 48.524
+      },
+      "ratio_walker_over_plan": 3.147,
+      "ratio_walker_over_jit": 8.8,
+      "beat": 1,
+      "lose": 0
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "claim": "3 - exits-only collapses traffic",
+  "verdict": "PASS",
+  "reason": "traffic ratio tracks intermediates-over-exits at every depth and recurrence amplifies it: {depth: (unique, recurrent)} = {4: (2.7, 8.0), 16: (10.7, 32.0), 64: (42.7, 127.9)}",
+  "configs": [
+    {
+      "depth": 4,
+      "dist": "unique",
+      "measured_ratio": 2.667,
+      "threshold_D_over_2": 2.0,
+      "ok": true,
+      "staged_bytes": 64000000,
+      "exit_bytes": 24000000
+    },
+    {
+      "depth": 4,
+      "dist": "recurrent",
+      "measured_ratio": 7.992,
+      "threshold_D_over_2": 2.0,
+      "ok": true,
+      "staged_bytes": 64000000,
+      "exit_bytes": 8008000
+    },
+    {
+      "depth": 16,
+      "dist": "unique",
+      "measured_ratio": 10.667,
+      "threshold_D_over_2": 8.0,
+      "ok": true,
+      "staged_bytes": 256000000,
+      "exit_bytes": 24000000
+    },
+    {
+      "depth": 16,
+      "dist": "recurrent",
+      "measured_ratio": 31.968,
+      "threshold_D_over_2": 8.0,
+      "ok": true,
+      "staged_bytes": 256000000,
+      "exit_bytes": 8008000
+    },
+    {
+      "depth": 64,
+      "dist": "unique",
+      "measured_ratio": 42.667,
+      "threshold_D_over_2": 32.0,
+      "ok": true,
+      "staged_bytes": 1024000000,
+      "exit_bytes": 24000000
+    },
+    {
+      "depth": 64,
+      "dist": "recurrent",
+      "measured_ratio": 127.872,
+      "threshold_D_over_2": 32.0,
+      "ok": true,
+      "staged_bytes": 1024000000,
+      "exit_bytes": 8008000
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+kernel: 6.18.5
+cpu:  Intel(R) Xeon(R) Processor @ 2.80GHz
+L2 (all instances): 4194304 bytes
+branchy .text (dispatcher fn, bodies inlined): 69303
+engine .text (vocabulary + machinery, shared): 9173

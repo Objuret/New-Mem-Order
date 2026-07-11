@@ -1,0 +1,6 @@
+{"depth":4,"dist":"unique","M":2000000,"staged_bytes":64000000,"exit_bytes":24000000,"ratio":2.667,"intermediates":4}
+{"depth":4,"dist":"recurrent","M":2000000,"staged_bytes":64000000,"exit_bytes":8008000,"ratio":7.992,"intermediates":4}
+{"depth":16,"dist":"unique","M":2000000,"staged_bytes":256000000,"exit_bytes":24000000,"ratio":10.667,"intermediates":16}
+{"depth":16,"dist":"recurrent","M":2000000,"staged_bytes":256000000,"exit_bytes":8008000,"ratio":31.968,"intermediates":16}
+{"depth":64,"dist":"unique","M":2000000,"staged_bytes":1024000000,"exit_bytes":24000000,"ratio":42.667,"intermediates":64}
+{"depth":64,"dist":"recurrent","M":2000000,"staged_bytes":1024000000,"exit_bytes":8008000,"ratio":127.872,"intermediates":64}

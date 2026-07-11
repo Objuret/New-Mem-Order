@@ -1,0 +1,5 @@
+kernel: 6.18.5
+cpu:  Intel(R) Xeon(R) Processor @ 2.80GHz
+M=2000000 batch=256 memo=off
+byte counters are code-side on both sides; channel decode
+parity enforced in-bench (abort on mismatch)

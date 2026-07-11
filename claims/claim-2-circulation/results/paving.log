@@ -1,0 +1,6 @@
+depth=4 paving_ns_total=44236091 jit=1
+depth=8 paving_ns_total=50991195 jit=1
+depth=16 paving_ns_total=50911640 jit=1
+depth=32 paving_ns_total=87619052 jit=1
+depth=64 paving_ns_total=177313982 jit=1
+depth=120 paving_ns_total=228209917 jit=1

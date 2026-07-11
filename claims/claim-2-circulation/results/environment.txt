@@ -1,0 +1,7 @@
+kernel: 6.18.5
+cpu:  Intel(R) Xeon(R) Processor @ 2.80GHz
+gcc: gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+M=2000000 REPS=7 batch=256 memo=off
+virtualized: docker
+note: no PMU on this host - wall-time accounting only;
+the claim also names instructions and energy (unmeasured here)
