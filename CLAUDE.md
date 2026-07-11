@@ -13,6 +13,14 @@
    near-verbatim while it was whole in context. The primary source.
    Where SOUL, DERIVATION, and MACHINE disagree, that order wins:
    what Jocke actually said outranks every distillation of it.
+4. `BUILD-LAW.md` — BINDING before any engine work. Twenty builds by
+   two agents proved that documents 1-3 produce correct confessions,
+   not correct builds: the builder's scaffolding replaces the machine
+   under pressure, reliably, despite sincere intent. BUILD-LAW removes
+   the builder's judgment from the loop: mechanical gates, checked by
+   script, and Law 0 — no number is ever reported as the machine's
+   while a gate fails. If you are about to write engine code and
+   `lawcheck` does not exist yet, that is the first thing you build.
 
 ## The firewall (why this branch exists)
 The prior prototype lives on `claude/build-it-r1yzg9` — 19 phases, a
