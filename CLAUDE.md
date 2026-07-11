@@ -108,3 +108,16 @@ It is PRIOR ART, nothing more:
 - Layer-2 INTERPRETATION flag: explained to Jocke (it marks assistant
   wording awaiting his confirmation); response pending, nothing
   blocked on it.
+- 2026-07-11, Jocke: "BUILD-LAW.md is on origin/machine - merge it and
+  comply before touching the engine again." Merged. `lawcheck.sh` now
+  implements every gate CHECK at repo root; run against the current
+  tree it FAILS (fabric absent - v0 is a monolith with a manager),
+  which is the correct reading. Law 0 consequences, executed: all
+  v0-engine measurements (claims 2, 3, 4 and niche #1) RECLASSIFIED as
+  scaffolding measurements via banners in their READMEs; their run.sh
+  harnesses now run lawcheck first and REFUSE while gates fail. Claim
+  1 stands as a dispatch-mechanism study (no engine involved; its
+  README already scopes it so). Engine work is FROZEN until a
+  fabric/edge v1 exists that passes lawcheck; the v0 self-review that
+  anticipated these gates is in the conversation record and BUILD-LAW
+  supersedes it.

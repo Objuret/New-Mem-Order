@@ -2,6 +2,11 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
+# BUILD-LAW Law 0: this harness measures through the engine. It runs
+# lawcheck first and REFUSES while any gate fails - a number produced
+# under a failing gate would be scaffolding reported as the machine.
+../../lawcheck.sh || { echo "lawcheck FAIL: Law 0 - harness refuses to measure." >&2; exit 1; }
+
 M=${M:-2000000}
 REPS=${REPS:-7}
 mkdir -p results

@@ -1,5 +1,15 @@
 # Claim 2 — Circulation beats program-mediated stepping
 
+> **Law 0 reclassification (BUILD-LAW.md, merged after this run):**
+> these numbers were produced by engine v0, which fails every gate
+> (manager in the loop, batching with provenance metadata, computed
+> identity, no fabric/edge separation). They are measurements of
+> SCAFFOLDING composed with the machine's mechanisms — not results of
+> the machine. They remain recorded as engineering data; the harness
+> now runs `lawcheck` first and refuses to produce new numbers until
+> the gates pass.
+
+
 MACHINE.md, falsifiable claim 2:
 
 > Whole-tree fused firing vs one-operation-at-a-time with materialized

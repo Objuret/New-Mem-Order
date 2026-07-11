@@ -1,5 +1,15 @@
 # Claim 3 — Exits-only collapses traffic
 
+> **Law 0 reclassification (BUILD-LAW.md, merged after this run):**
+> these numbers were produced by engine v0, which fails every gate
+> (manager in the loop, batching with provenance metadata, computed
+> identity, no fabric/edge separation). They are measurements of
+> SCAFFOLDING composed with the machine's mechanisms — not results of
+> the machine. They remain recorded as engineering data; the harness
+> now runs `lawcheck` first and refuses to produce new numbers until
+> the gates pass.
+
+
 MACHINE.md, falsifiable claim 3:
 
 > Bytes crossing the core/memory and node/node boundaries, staged vs
