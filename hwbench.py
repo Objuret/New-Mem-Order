@@ -153,16 +153,19 @@ def rapl_paths():
     """Readable RAPL package domains (intel-rapl:0, intel-rapl:1, ...)."""
     base = "/sys/class/powercap"
     found = []
-    if os.path.isdir(base):
-        for d in sorted(os.listdir(base)):
-            if d.count(":") != 1:             # packages only, not subzones
-                continue
-            f = os.path.join(base, d, "energy_uj")
-            try:
-                int(open(f).read())
-                found.append(os.path.join(base, d))
-            except (OSError, ValueError):
-                pass
+    try:                    # android: dir visible but listing denied
+        entries = sorted(os.listdir(base)) if os.path.isdir(base) else []
+    except OSError:
+        return []
+    for d in entries:
+        if d.count(":") != 1:                 # packages only, not subzones
+            continue
+        f = os.path.join(base, d, "energy_uj")
+        try:
+            int(open(f).read())
+            found.append(os.path.join(base, d))
+        except (OSError, ValueError):
+            pass
     return found
 
 
