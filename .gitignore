@@ -14,3 +14,4 @@ engine/harness/measure
 engine/harness/rematch
 engine/harness/g1_count.h
 engine/scaffold-v0/tests/test_engine
+engine/harness/circulate
