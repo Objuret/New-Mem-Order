@@ -10,10 +10,11 @@ static uint64_t krnd(void) {
     return krs * 0x2545F4914F6CDD1DULL;
 }
 
-static void kernel(nmo_tree *t, uint32_t tag) {
+static void kernel_wired(nmo_tree *t, uint32_t tag, uint32_t salt,
+                         uint32_t exit_to) {
     memset(t, 0, sizeof(*t));
     t->tag = tag;
-    krs = 0xC1A140 ^ tag;
+    krs = 0xC1A140 ^ salt;
     uint16_t n = 0;
     t->nodes[n++].op = NMO_OP_INPUT;
 #define K(o, A, B, IMM) do { t->nodes[n].op = (o); t->nodes[n].a = (A); \
@@ -45,6 +46,10 @@ static void kernel(nmo_tree *t, uint32_t tag) {
     t->nnodes = n;
     t->nexits = 1;
     t->exits[0] = n - 1;
-    t->exit_to[0] = NMO_EXIT_BOUNDARY;
+    t->exit_to[0] = exit_to;
+}
+
+static void kernel(nmo_tree *t, uint32_t tag) {
+    kernel_wired(t, tag, tag, NMO_EXIT_BOUNDARY);
 }
 #endif

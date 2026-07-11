@@ -135,3 +135,13 @@ It is PRIOR ART, nothing more:
   named next target. bl_named-style opponents (consuming the machine's
   own carried names) are classified as ablations, not baselines - an
   opponent must be constructible without the machine's edge.
+- 2026-07-11, circulation engagement, LAWFUL WIN (engine/results/
+  circulate.json): 3-stage chains (2064 trees), same definitions all
+  sides. Pure circulation 8.55 ns/event beats the compiled-fused
+  ceiling (10.84) - trees-feeding-trees with intermediates dying in
+  registers outruns even single-program compiler fusion, and moves 0
+  intermediate bytes vs the pipeline's 1.58MB (pipeline: 14.40).
+  Full machine (whole-chain matrix under entry name, enabled by
+  plant's transitive single-exit analysis; cycles rejected at plant)
+  1.97 vs strongest conventional fused+hash-memo 3.82: WIN, trimmed
+  ranges disjoint. Layers 4+5 now pay together, lawfully.

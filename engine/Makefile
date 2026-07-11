@@ -2,7 +2,7 @@ CC ?= gcc
 CFLAGS ?= -O2 -Wall -Wextra -std=c11
 FABRIC_INC := $(abspath fabric)
 
-all: harness/differential harness/measure harness/rematch
+all: harness/differential harness/measure harness/rematch harness/circulate
 
 fabric/fabric.o: fabric/fabric.c fabric/fabric.h
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -39,4 +39,7 @@ clean:
 .PHONY: all test clean
 
 harness/rematch: harness/rematch.c harness/kernels.h fabric/fabric.o edge/edge.a
+	$(CC) $(CFLAGS) -Iharness $< fabric/fabric.o edge/edge.a -ldl -lm -o $@
+
+harness/circulate: harness/circulate.c harness/kernels.h fabric/fabric.o edge/edge.a
 	$(CC) $(CFLAGS) -Iharness $< fabric/fabric.o edge/edge.a -ldl -lm -o $@

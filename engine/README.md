@@ -22,3 +22,12 @@ WIN, ranges disjoint.** Ablation (edge + flat loop, no fabric): 2.22 —
 the fabric's remaining ~0.9 ns overhead, named as the next target.
 Emulation ledger: paving 5.9 s for 688 roads, convert ~0.7 µs/event
 (text parsing; real deployments feed binary).
+
+Circulation engagement (`results/circulate.json`, same stream, 3-stage
+chains per event, 2064 trees): trees-feed-trees circulation 8.55
+ns/event beats even the compiled-fused ceiling (10.84) and crushes the
+materializing pipeline (14.40, which also crossed 1.58 MB of
+intermediates vs the machine's 0). Full machine (whole-chain result
+matrix under the entry name) 1.97 vs strongest conventional
+(fused+hash-memo) 3.82 — **coded verdict: WIN, trimmed ranges
+disjoint** (symmetric 1-rep trim, declared pre-verdict, both sides).

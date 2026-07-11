@@ -29,11 +29,49 @@ int nmo_tree_valid(const nmo_tree *t, uint32_t ntags) {
     return 0;
 }
 
+/* boundary exits produced per firing of tag's chain; -1 on cycle.
+ * Acyclic wiring + fixed vocabulary = guaranteed termination: a cycle
+ * is rejected at the door, not discovered at runtime. */
+static int chain_exits(const nmo_tree *const *by_tag, uint32_t tag,
+                       uint8_t *state) {
+    if (state[tag] == 1) return -1;             /* cycle */
+    if (!by_tag[tag]) return -1;                /* dangling target */
+    state[tag] = 1;
+    int total = 0;
+    const nmo_tree *t = by_tag[tag];
+    for (uint16_t p = 0; p < t->nexits; p++) {
+        if (t->exit_to[p] == NMO_EXIT_BOUNDARY) total++;
+        else {
+            int sub = chain_exits(by_tag, t->exit_to[p], state);
+            if (sub < 0) { state[tag] = 0; return -1; }
+            total += sub;
+        }
+    }
+    state[tag] = 2;
+    return total;
+}
+
 nmo_fabric *nmo_plant(const nmo_tree *trees, uint32_t ntrees,
                       uint32_t ntags, uint32_t name_span,
                       uint64_t *exit_region) {
     for (uint32_t i = 0; i < ntrees; i++)
         if (nmo_tree_valid(&trees[i], ntags) != 0) return 0;
+
+    const nmo_tree **by_tag = calloc(ntags, sizeof(*by_tag));
+    for (uint32_t i = 0; i < ntrees; i++)
+        by_tag[trees[i].tag] = &trees[i];
+    uint8_t *state = calloc(ntags, 1);
+    int *nexit_of = malloc((size_t)ntags * sizeof(int));
+    for (uint32_t i = 0; i < ntrees; i++) {
+        memset(state, 0, ntags);
+        nexit_of[trees[i].tag] =
+            chain_exits(by_tag, trees[i].tag, state);
+        if (nexit_of[trees[i].tag] < 0) {       /* cycle or dangling */
+            free(by_tag); free(state); free(nexit_of);
+            return 0;
+        }
+    }
+    free(by_tag); free(state);
 
     nmo_fabric *f = calloc(1, sizeof(*f));
     f->roads = calloc(ntags, sizeof(nmo_road));
@@ -52,12 +90,13 @@ nmo_fabric *nmo_plant(const nmo_tree *trees, uint32_t ntrees,
         uint32_t tag = copy[i].tag;
         f->roads[tag].fn = nmo_walk_road;   /* slow road until paved */
         f->roads[tag].tree = &copy[i];
-        /* result matrix only where identity arrives: single-boundary-
-         * exit entry roads */
-        if (name_span && copy[i].nexits == 1
-            && copy[i].exit_to[0] == NMO_EXIT_BOUNDARY)
+        /* result matrix where identity arrives AND the whole chain
+         * concludes in exactly one boundary exit: recurrence of the
+         * entry name then rides as one load for the entire chain */
+        if (name_span && nexit_of[tag] == 1)
             f->matrix_ok[tag] = 1;
     }
+    free(nexit_of);
     return f;
 }
 

@@ -1,0 +1,6 @@
+{"circulation":{
+ "stream":{"events":98733,"entry_tags":688,"stages":3,"trees":2064,"entropy_before":4.555,"entropy_after":4.555},
+ "machine_account":{"circulating":{"mean":8.55,"min":8.32,"max":8.84},"circulating+matrix":{"mean":1.97,"min":1.81,"max":2.36},"intermediate_boundary_bytes":0},
+ "baseline_account":{"bl_pipeline":{"mean":14.40,"min":13.98,"max":14.98,"intermediate_boundary_bytes":1579728},"bl_fused":{"mean":10.84,"min":10.63,"max":11.11},"bl_fused_hashed":{"mean":3.82,"min":3.55,"max":4.22}},
+ "emulation_account":{"paving_ms":11566.8,"baseline_build_ms":8144.6},
+ "opponent":"bl_fused_hashed","verdict":"WIN"}}
