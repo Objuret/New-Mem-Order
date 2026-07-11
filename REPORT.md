@@ -834,6 +834,17 @@ compute-bound kernel through a branch-entropy handicap nobody had
 noticed. Phase 16's pinned numbers stand (default sid base = the
 worst case, kept for reproducibility).
 
+## Full-suite verification (2026-07-11)
+
+Every harness rerun end-to-end in the build container, in dependency
+order: demo/report, phase3_tests (FUSE), phases 4–17, phase16
+(cachegrind), hwbench — **18/18 PASS**. Pinned invariants reproduced:
+0.29× bytes and 0.15× LL misses at p=99 (phase 16); amx store 20,010
+files → 2 with all gates green (phase 17); hwbench walk-bound wins
+0.45× single-core / 0.46× all-cores with answers asserted identical
+everywhere (phase 18). Result JSONs in the tree remain the original
+per-phase evidence; this section records the verification run.
+
 ## Reproducing
 
 ```
