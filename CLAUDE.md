@@ -80,4 +80,23 @@ It is PRIOR ART, nothing more:
   branchy code (fits L2, but doesn't beat compiled code on bytes;
   packing is the named target). Claim 5 still needs Jocke's phone.
 - Measured to date: claims 1, 2, 3 PASS; 4 open on representation
-  fatness; 5 blocked on hardware. All verdicts coded, none narrated.
+  fatness; 5 PARKED by Jocke ("I don't care about this", 2026-07-11).
+  All verdicts coded, none narrated.
+- 2026-07-11, niche engagement #1 (`niche/syscall-telemetry/`),
+  Jocke's direction "just try it with the real programs installed":
+  real strace traffic of real programs, imposed enrichment kernels,
+  one definition both sides, memoized baseline allowed. **Coded
+  verdict: LOSS** - 3.61 vs 10.07 ns/event at entropy 3.4 bits and
+  kernel depth ~12. Operating point and mechanical decomposition in
+  that README (regime is predictor-territory per claim 1's own map;
+  ~4-6ns/event v0 engine bookkeeping has nothing to amortize against
+  at this depth; memo doesn't pay when compute is this cheap). This is
+  kill-condition evidence at ONE operating point, recorded, not
+  generalized - next engagement should aim where the measured map
+  points: deeper per-event work and/or higher kind-entropy traffic.
+- PMU accounting: Jocke has no bare-metal Linux; WSL also exposes no
+  PMU. Independent reproduction available to him anytime via the
+  claims' run.sh scripts under WSL; counters remain unmeasured.
+- Layer-2 INTERPRETATION flag: explained to Jocke (it marks assistant
+  wording awaiting his confirmation); response pending, nothing
+  blocked on it.

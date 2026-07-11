@@ -1,0 +1,66 @@
+{
+  "niche": "syscall telemetry enrichment over real program traces",
+  "verdict": "LOSS",
+  "reason": "bl_switch beats the machine on real traffic: 3.61 vs 10.07 ns/event. This is kill-condition evidence at this traffic's operating point (entropy 3.436 bits, recurrence 94.5%) - record, do not reinterpret",
+  "opponent": "bl_switch",
+  "steady_state_ns_per_event": {
+    "bl_memo": {
+      "med": 3.623,
+      "min": 3.322,
+      "max": 5.437
+    },
+    "bl_switch": {
+      "med": 3.614,
+      "min": 3.534,
+      "max": 4.786
+    },
+    "eng_jit": {
+      "med": 10.067,
+      "min": 9.417,
+      "max": 11.863
+    },
+    "eng_jit_nm": {
+      "med": 9.612,
+      "min": 9.227,
+      "max": 10.566
+    },
+    "eng_plan": {
+      "med": 10.273,
+      "min": 9.83,
+      "max": 11.931
+    }
+  },
+  "cold_pass": {
+    "eng_plan": {
+      "variant": "eng_plan",
+      "rep": -1,
+      "cold": true,
+      "ns_per_elem": 20.5486,
+      "paving_ms": 0.2,
+      "jit_roads": 0
+    },
+    "eng_jit": {
+      "variant": "eng_jit",
+      "rep": -1,
+      "cold": true,
+      "ns_per_elem": 36401.854,
+      "paving_ms": 3588.9,
+      "jit_roads": 65
+    },
+    "eng_jit_nm": {
+      "variant": "eng_jit_nm",
+      "rep": -1,
+      "cold": true,
+      "ns_per_elem": 36539.33,
+      "paving_ms": 3603.1,
+      "jit_roads": 65
+    }
+  },
+  "stream": {
+    "events": 98658,
+    "distinct_syscalls": 65,
+    "tag_entropy_bits": 3.436,
+    "max_entropy_bits": 6.022,
+    "value_recurrence": 0.9453
+  }
+}

@@ -1,0 +1,139 @@
+{
+  "events": 98658,
+  "distinct_syscalls": 65,
+  "tag_entropy_bits": 3.436,
+  "max_entropy_bits": 6.022,
+  "value_recurrence": 0.9453,
+  "distinct_tag_value_pairs": 5396,
+  "per_trace_events": {
+    "traces/find.txt": 39893,
+    "traces/gcc.txt": 2458,
+    "traces/gcc2.txt": 9759,
+    "traces/git.txt": 879,
+    "traces/grep.txt": 24460,
+    "traces/hash.txt": 6647,
+    "traces/make.txt": 6971,
+    "traces/python.txt": 858,
+    "traces/python2.txt": 667,
+    "traces/tar.txt": 6066
+  },
+  "top10": [
+    {
+      "syscall": "close",
+      "count": 17314,
+      "share": 0.1755
+    },
+    {
+      "syscall": "read",
+      "count": 14540,
+      "share": 0.1474
+    },
+    {
+      "syscall": "fcntl",
+      "count": 14234,
+      "share": 0.1443
+    },
+    {
+      "syscall": "openat",
+      "count": 10589,
+      "share": 0.1073
+    },
+    {
+      "syscall": "fstat",
+      "count": 9773,
+      "share": 0.0991
+    },
+    {
+      "syscall": "readlink",
+      "count": 8682,
+      "share": 0.088
+    },
+    {
+      "syscall": "newfstatat",
+      "count": 8207,
+      "share": 0.0832
+    },
+    {
+      "syscall": "getdents64",
+      "count": 6223,
+      "share": 0.0631
+    },
+    {
+      "syscall": "write",
+      "count": 2397,
+      "share": 0.0243
+    },
+    {
+      "syscall": "lseek",
+      "count": 1648,
+      "share": 0.0167
+    }
+  ],
+  "tag_names": [
+    "execve",
+    "brk",
+    "mmap",
+    "access",
+    "openat",
+    "fstat",
+    "close",
+    "read",
+    "pread64",
+    "arch_prctl",
+    "set_tid_address",
+    "set_robust_list",
+    "rseq",
+    "mprotect",
+    "prlimit64",
+    "munmap",
+    "statfs",
+    "getrandom",
+    "uname",
+    "ioctl",
+    "newfstatat",
+    "fcntl",
+    "getdents64",
+    "fstatfs",
+    "write",
+    "fchdir",
+    "rt_sigaction",
+    "readlink",
+    "getcwd",
+    "pipe2",
+    "vfork",
+    "sysinfo",
+    "faccessat2",
+    "wait4",
+    "getrusage",
+    "unlink",
+    "lseek",
+    "getuid",
+    "getgid",
+    "geteuid",
+    "getegid",
+    "rt_sigprocmask",
+    "getpid",
+    "getppid",
+    "getpgrp",
+    "getpeername",
+    "clone",
+    "rt_sigreturn",
+    "chdir",
+    "sigaltstack",
+    "dup2",
+    "sched_getaffinity",
+    "fadvise64",
+    "setresuid",
+    "setresgid",
+    "clone3",
+    "unlinkat",
+    "dup",
+    "futex",
+    "umask",
+    "chmod",
+    "gettid",
+    "socket",
+    "connect",
+    "creat"
+  ]
+}

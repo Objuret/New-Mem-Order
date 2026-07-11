@@ -1,0 +1,7 @@
+kernel: 6.18.5
+cpu:  Intel(R) Xeon(R) Processor @ 2.80GHz
+gcc: gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+REPS=9 batch=256 memo=4096/road (engine and baseline)
+virtualized: docker
+traffic: real strace of real programs (see capture.sh);
+kernels: imposed enrichment (gen.py), same definition both sides

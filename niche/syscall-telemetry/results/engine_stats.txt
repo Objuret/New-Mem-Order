@@ -1,0 +1,3 @@
+eng_plan: memo_hits=939079 misses=41773 fired=47501 network_bytes=44324
+eng_jit: memo_hits=939079 misses=41773 fired=47501 network_bytes=44324
+eng_jit_nm: memo_hits=0 misses=0 fired=986580 network_bytes=44324

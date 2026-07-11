@@ -3,3 +3,7 @@ engine/*.o
 engine/*.a
 engine/tests/test_engine
 claims/*/bench
+niche/*/traces/
+niche/*/work/
+niche/*/bench
+niche/*/shapes.h
