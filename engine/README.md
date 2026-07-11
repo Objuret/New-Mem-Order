@@ -31,3 +31,15 @@ intermediates vs the machine's 0). Full machine (whole-chain result
 matrix under the entry name) 1.97 vs strongest conventional
 (fused+hash-memo) 3.82 — **coded verdict: WIN, trimmed ranges
 disjoint** (symmetric 1-rep trim, declared pre-verdict, both sides).
+
+Depth sweep (`results/circulate_depth_verdict.json`, S = 1,2,4,8
+stages per event): the full machine WINS at every depth (3.0-3.3
+ns/event, essentially depth-flat) while every opponent scales with S
+(pipeline 4.5→42.5, fused 4.7→34.6, fused+hash 4.6→5.9). The
+pipeline-over-circulation ratio grows monotonically 0.78x→1.98x, and
+pure circulation beats compiled fusion at every S ≥ 2 (at S=8: 21.4 vs
+34.6). Composite coded verdict: INCONCLUSIVE — the pre-coded condition
+required circulation to track fusion at S=1, where a chain has one
+tree and no circulation exists; the condition misfires there and is
+recorded as written, not rewritten after the fact. Every per-depth
+machine verdict is WIN.
