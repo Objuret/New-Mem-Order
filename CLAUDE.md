@@ -1,9 +1,14 @@
 # THE MACHINE — Session Orientation (branch: machine)
 
-## Read first
-`MACHINE.md` is the only source of truth on this branch. It was derived
-from Jocke's own statements (2026-07-11 conversation); his quotes are
-the axioms, formalizations are subordinate and provisional.
+## Read first, in order
+1. `MACHINE.md` — the spec, the only source of truth on this branch.
+   Derived from Jocke's own statements (2026-07-11); his quotes are the
+   axioms, formalizations are subordinate and provisional.
+2. `DERIVATION.md` — the reasoning chain that produced the spec, the
+   five corrections Jocke had to issue on the way, and the settled
+   arguments. Read it to RE-DERIVE the machine, not just obey it — an
+   agent that can't re-derive it will reinterpret it into whatever it
+   already knows, which is exactly the failure it documents.
 
 ## The firewall (why this branch exists)
 The prior prototype lives on `claude/build-it-r1yzg9` — 19 phases, a
