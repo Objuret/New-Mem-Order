@@ -70,3 +70,12 @@ still favor the machine (3.71 vs 4.27) but the VM's noise floor
 widened intra-day and ranges overlap - INCONCLUSIVE as coded; the
 recorded WIN stands tied to its own commit and environment. Rerun both
 on quieter hardware to settle.
+
+Fan-out engagement (`results/fanout.json`, one arrival -> two
+conclusions through a forking tree, 2064 trees, real stream): pure
+fan-out circulation 9.23 ns/event beats compiled-fused 10.32 and the
+materializing pipeline 13.26 (which crossed 1.58 MB of fork
+intermediates vs the machine's 0). Full machine (strided matrix
+replaying both conclusions from the carried name) 3.58 vs strongest
+conventional fused+hash-memo 4.73 — **coded verdict: WIN, trimmed
+ranges disjoint**, even on the day's noisy VM.

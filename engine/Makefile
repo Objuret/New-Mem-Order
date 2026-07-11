@@ -44,3 +44,6 @@ harness/rematch: harness/rematch.c harness/kernels.h fabric/fabric.o edge/edge.a
 
 harness/circulate: harness/circulate.c harness/kernels.h fabric/fabric.o edge/edge.a
 	$(CC) $(CFLAGS) -Iharness $< fabric/fabric.o edge/edge.a -ldl -lm -o $@
+
+harness/fanout: harness/fanout.c harness/kernels.h fabric/fabric.o edge/edge.a
+	$(CC) $(CFLAGS) -Iharness $< fabric/fabric.o edge/edge.a -ldl -lm -o $@

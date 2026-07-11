@@ -1,0 +1,6 @@
+{"fanout":{
+ "stream":{"events":98733,"entry_tags":688,"trees":2064,"exits_per_event":2},
+ "machine_account":{"circulating":{"mean":9.23,"min":9.07,"max":9.65},"circulating+matrix":{"mean":3.58,"min":3.27,"max":4.29},"intermediate_boundary_bytes":0},
+ "baseline_account":{"bl_pipeline":{"mean":13.26,"min":12.79,"max":13.99,"intermediate_boundary_bytes":1579728},"bl_fused":{"mean":10.32,"min":10.11,"max":10.75},"bl_fused_hashed":{"mean":4.73,"min":4.39,"max":5.50}},
+ "emulation_account":{"paving_ms":13846.2,"baseline_build_ms":8146.6},
+ "opponent":"bl_fused_hashed","verdict":"WIN"}}

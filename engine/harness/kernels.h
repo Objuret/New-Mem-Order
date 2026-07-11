@@ -52,4 +52,14 @@ static void kernel_wired(nmo_tree *t, uint32_t tag, uint32_t salt,
 static void kernel(nmo_tree *t, uint32_t tag) {
     kernel_wired(t, tag, tag, NMO_EXIT_BOUNDARY);
 }
+
+/* fan-out: same body, two conclusions - the final SELECT and the
+ * pre-fork mix - each wired to its own target */
+static void kernel_fan2(nmo_tree *t, uint32_t tag, uint32_t salt,
+                        uint32_t to0, uint32_t to1) {
+    kernel_wired(t, tag, salt, to0);
+    t->nexits = 2;
+    t->exits[1] = (uint16_t)(t->nnodes - 4);    /* the norm-path mix */
+    t->exit_to[1] = to1;
+}
 #endif

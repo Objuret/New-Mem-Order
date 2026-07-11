@@ -175,7 +175,15 @@ It is PRIOR ART, nothing more:
   Differential covers fan-out. NOTE: VM noise floor widened intra-day
   (consecutive identical runs swing 25%); post-change rematch means
   favor the machine (3.71 vs 4.27) but ranges overlap - INCONCLUSIVE
-  as coded, recorded beside the standing WIN. NEXT: the fan-out
-  engagement harness (fanout.c: entry tree -> two boundary trees, vs
-  pipeline/fused/fused_hashed, machine with strided matrix), then
-  richer payloads at the edge.
+  as coded, recorded beside the standing WIN.
+- 2026-07-11, fan-out engagement, LAWFUL WIN (engine/results/
+  fanout.json): one arrival -> two conclusions (entry forks to two
+  boundary trees, 2064 trees, real stream). Pure fan-out circulation
+  9.23 ns/event beats compiled-fused 10.32 and pipeline 13.26 (1.58MB
+  fork intermediates vs 0). Full machine with strided matrix 3.58 vs
+  strongest conventional fused+hash 4.73: WIN, trimmed ranges
+  disjoint, despite the noisy VM. Scoreboard: routing WIN, circulation
+  WIN (depth-flat), fan-out WIN; claim 4 open on the 1.9x residency
+  gap; claim 5 parked. NEXT: richer payloads at the edge (multi-slot
+  records - real events carry more than one value), then the 1.9x
+  residency gap, then re-verdict everything on quiet hardware.
