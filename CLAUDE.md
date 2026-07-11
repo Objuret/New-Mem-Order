@@ -9,6 +9,10 @@
    arguments. Read it to RE-DERIVE the machine, not just obey it — an
    agent that can't re-derive it will reinterpret it into whatever it
    already knows, which is exactly the failure it documents.
+3. `SOUL.md` — the conversation itself, both voices, preserved
+   near-verbatim while it was whole in context. The primary source.
+   Where SOUL, DERIVATION, and MACHINE disagree, that order wins:
+   what Jocke actually said outranks every distillation of it.
 
 ## The firewall (why this branch exists)
 The prior prototype lives on `claude/build-it-r1yzg9` — 19 phases, a
