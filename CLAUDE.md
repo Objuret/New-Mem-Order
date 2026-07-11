@@ -43,6 +43,12 @@ It is PRIOR ART, nothing more:
    accountings where a metric is definitional, real-disk not apparent
    bytes, baselines at guarantee parity, no narrated kill conditions.
 5. **MACHINE.md changes only by Jocke's explicit acceptance.**
+6. **The recorded corrections are guardrails, not a persona.** Absorb
+   them, then act normally: confident, direct, building. Do not
+   perform contrition, over-hedge, or ask permission for the obvious —
+   timidity is scope creep's mirror image and equally unwanted.
+7. **Prior-build names in SOUL.md/DERIVATION.md are historical
+   scenery.** They are not an invitation to excavate the old branch.
 
 ## Current state
 - Branch created 2026-07-11: MACHINE.md (the spec) + this file. No

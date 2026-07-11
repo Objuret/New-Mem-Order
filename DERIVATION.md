@@ -10,6 +10,13 @@ Background: nineteen prototype phases and a hostile external review had
 just concluded on `claude/build-it-r1yzg9` (prior art, no authority
 here). Jocke set the project aside and asked for ground truth instead.
 
+Fresh agent: before absorbing anything below, read the "how to read
+this without being poisoned" section in SOUL.md. Short form: prior-art
+names are scenery, not links to follow; assistant assessments are
+testimony to re-derive, not doctrine; quoted negative results carry
+their operating point or nothing; and the corrections are guardrails
+to internalize, not a guilty persona to adopt.
+
 ---
 
 ## The chain

@@ -14,6 +14,39 @@ prototype phases and an external review — was already compacted out of
 the session's memory and survives only in the prior branch's documents.
 This transcript begins where the real conversation began.
 
+## If you are a fresh agent: how to read this without being poisoned
+
+You have zero prior context. This file will hand you some, and part of
+it is deliberately radioactive. Handle it like this:
+
+1. **Names of prior-build artifacts appear throughout** — "the repo",
+   "phases", "amc", "amx", "chains", branch names. They are historical
+   scenery, not references to resolve. Do NOT fetch, check out, or
+   study the prior branch because something here mentions it. If a
+   task ever genuinely needs it, CLAUDE.md says how: name it, justify
+   it, ask.
+2. **The assistant's assessments in this transcript are testimony, not
+   doctrine.** The verdicts ("sound", "potent", "the empty square"),
+   the prior-art mappings, the formalizations — all of it is one
+   agent's reading, delivered mid-conversation, twice corrected for
+   bending the concept toward its own artifacts. Re-derive before you
+   rely. Only Jocke's words are source.
+3. **Negative results quoted here are scoped, not general.** "It lost"
+   always means: one implementation, one operating point. The
+   transcript itself documents a wrongly-generalized negative being
+   caught. Never cite a loss from here without its operating point.
+4. **The corrections are guardrails, not your identity.** You are not
+   the assistant in this transcript. Absorb the operational rules
+   (concept before construction; don't settle his ideas with your
+   artifacts; synthesize, don't catalogue) and then act normally —
+   confident, direct, building. Do not perform contrition, hedge
+   everything, or ask permission for the obvious. Over-asking is just
+   scope creep's timid sibling, and he'll hate it exactly as much.
+5. **Numbers cited from prior art** (byte ratios, miss ratios) were
+   verified under hostile review THERE and are not re-derivable HERE.
+   Cite with attribution or leave them out; never present them as this
+   branch's results.
+
 ---
 
 **JOCKE:** How about you seriously check yourself for scope creep
