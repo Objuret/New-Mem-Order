@@ -1,5 +1,58 @@
 # Prototype Report — Message Board on the Activation Model
 
+> ## ERRATA & CORRECTIONS (2026-07-11, from the external review)
+>
+> An adversarial external audit (`CRITICAL-REVIEW.md`, branch
+> `claude/critical-build-review-42kzhx`; dispositions in
+> `RESPONSE-TO-REVIEW.md`) found real errors. Corrections, in severity
+> order — each also applied at the cited section:
+>
+> 1. **Phase 16 wall-time table contradicted its own evidence file.** The
+>    published p=99 single-core ratio (1.17×) did not match the committed
+>    `phase16-results.json` (1.52×); the table had been transcribed from a
+>    different run's console output than the JSON committed beside it. The
+>    table below is now computed from the committed JSON. Same-day reruns
+>    land 1.16–1.20×; the honest statement is **1.2–1.5× across runs**, and
+>    no dispersion was originally reported. This was the review's most
+>    serious finding and it was correct.
+> 2. **Phase 10's compression claim was gzip-specific.** `xz -6` compresses
+>    the same corpus to **0.74 MB** vs the store's 4.60 MB apparent bytes —
+>    6× smaller — and the store's own recorded ext4 block usage is
+>    **18.4 MB (4,130 files)**, which loses to the 7.63 MB tar.gz it was
+>    said to beat. "Beats gzip 1.7×" and "under the dedup floor" are
+>    retracted as ranking claims; what stands is the mechanism (references
+>    see recurrence beyond any compression window) and per-file
+>    demandability, with the honest comparison to CAS backup tools
+>    (borg/restic) recorded as open. Phases 3/6/9 apparent-vs-block
+>    comparisons carry the same caveat.
+> 3. **Phase 11's "0.86× of cat" was not cat.** Both sides pay an identical
+>    per-byte fold that dominates the baseline; the honest label is
+>    "0.86× of a raw-read-plus-identical-fold reference." The kill
+>    condition was narrated, never coded; the cold 0.42× was a single run
+>    that inverted on the reviewer's machine.
+> 4. **Phase 13's crossings metric is accounting-dependent.** Charging the
+>    Python router's receiver-side literal copies the way `json.loads` is
+>    charged moves the model from 1.79 to ≈3.4 crossings/byte — above the
+>    indexed conventional design (2.68). Both accountings now stand in the
+>    phase-13 section; the amx engine pays no such copies (zero-copy
+>    slices) but was never remeasured under this metric — open work.
+> 5. **"Malformed input is unexpressible" was false as stated.** Three
+>    crash paths (NUL-byte reference, legal deep nesting, corrupt head)
+>    were fixed this commit and pinned by `robustness_tests.py`. The
+>    defensible claim is ONE deduplicated parser, not a deleted parser
+>    class.
+> 6. **Crash-consistency was over-claimed.** `emit-disk` now writes
+>    tmp-then-rename (torn writes can no longer corrupt a reference), but
+>    nothing fsyncs: the guarantee is process-crash consistency, NOT
+>    power-loss durability. Native engines still truncate in place (debt).
+> 7. **The flat structure count needs its second tier stated.** Universal
+>    tier: flat at 11. Data-derived template/shape tier: grows with content
+>    (1,506 templates in phase 10). Both numbers are the finding.
+> 8. **Phase 18's magnitude is machine-dependent** (0.44–0.69× across runs
+>    on this VM, ~0.65× on the reviewer's, 0.85× all-cores on the Pixel);
+>    direction reproduces everywhere. `phase18-results.json` is now
+>    committed evidence.
+
 Answers the brief's four measurements and the spec's §6 question. Two
 phases: phase 1 (the message board) and phase 2 (computation pressure:
 queries over the phase-1 data). Numbers are from the demo run of
@@ -705,10 +758,18 @@ hierarchy. Reproduce: `python3 phase16.py`.
 
 | p (recurrence) | stream bytes (am/raw) | LL misses per record (am/raw) | wall (am/raw, 1 core) |
 |---|---|---|---|
-| 0% | 1.13× | 1.13× | 1.07× |
-| 50% | 0.70× | 0.71× | 1.16× |
+| 0% | 1.13× | 1.13× | 1.10× |
+| 50% | 0.70× | 0.71× | 1.18× |
 | 90% | 0.37× | **0.19×** | 1.17× |
-| 99% | **0.29×** | **0.15×** | 1.17× |
+| 99% | **0.29×** | **0.15×** | **1.52×** |
+
+*(CORRECTED 2026-07-11: the wall column is now computed from the
+committed `phase16-results.json`; the originally published column —
+1.07/1.16/1.17/**1.17** — was transcribed from a different run's console
+output and understated the p=99 penalty. Same-day reruns give 1.16–1.20×
+at p=99: the defensible statement is 1.2–1.5× across runs on this VM,
+with the phase-18 finding — reference-width branch entropy — later
+explaining much of the walk cost. See ERRATA #1.)*
 
 **The §0 mechanism is real in the traffic domain**: references into a
 cache-resident table convert recurrence into cache hits — 6.7× fewer

@@ -900,3 +900,26 @@ through a branch-entropy handicap. (2) Reference ALLOCATION is a real
 world-side performance discipline: hot resident structures deserve a
 uniform-width sid band (DECISIONS 1.19). Phase 16's pinned baselines
 stand unchanged (default base 100 = the honest worst case).
+
+## 56. The first hostile grader found real errors within hours
+
+2026-07-11: an external adversarial review (CRITICAL-REVIEW.md on
+`claude/critical-build-review-42kzhx`; dispositions in
+RESPONSE-TO-REVIEW.md) audited the whole build. Confirmed on
+independent verification: the phase-16 wall table contradicted its own
+committed JSON at the headline point (1.17× published, 1.52× in the
+evidence — transcribed from a different run and never cross-checked);
+the phase-10 compression win was gzip-specific (xz: 6× smaller than
+the store; the store's own recorded ext4 blocks lose to the tar.gz it
+claimed to beat); phase 11's "cat" baseline was mostly a checksum both
+sides pay; three hostile-input crash paths contradicted "always fires
+or refuses"; the crash-consistency claim assumed a write atomicity
+emit-disk did not have. All corrected this commit (ERRATA at the top
+of REPORT.md; crash paths fixed and pinned by robustness_tests.py;
+emit-disk now write-then-rename). The friction to log is the process
+finding: eighteen phases of self-graded comparative baselines produced
+exactly the blind spots a hostile reader would look for first, while
+the correctness gates (cross-language byte identity) — the paranoid,
+mechanical checks — survived the same audit untouched. The lesson is
+structural: identity gates can be self-graded; BASELINES cannot. The
+model did not fight back here; the experimenter did.

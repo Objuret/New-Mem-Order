@@ -47,7 +47,8 @@ def resolve_ref(world_root, ref):
         rel = ref.decode()
     except UnicodeDecodeError:
         raise Refusal(b"bad reference: " + ref)
-    if not rel or rel.startswith(("/", "\\")) or ".." in rel.split("/"):
+    if not rel or "\x00" in rel or rel.startswith(("/", "\\")) \
+            or ".." in rel.split("/"):
         raise Refusal(b"bad reference: " + ref)
     path = os.path.realpath(os.path.join(world_root, rel))
     if not path.startswith(os.path.realpath(world_root) + os.sep):
@@ -249,8 +250,15 @@ def make_registry(world_root):
         ref, content = values
         path = resolve_ref(world_root, ref)
         os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, "wb") as f:
+        # write-then-replace: a torn write can never leave a half-written
+        # file at the reference — the old bytes survive until the atomic
+        # swap (external review 2026-07-11 #9: truncate-in-place broke the
+        # head-emitted-last argument for mid-write crashes). Durability
+        # against power loss (fsync) is still NOT claimed anywhere.
+        tmp = path + ".emit-tmp"
+        with open(tmp, "wb") as f:
             f.write(content)
+        os.replace(tmp, path)
         return ref
 
     return MappingProxyType({

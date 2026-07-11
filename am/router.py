@@ -98,6 +98,11 @@ async def handle(reader, writer, structures, world_root, stats):
                     writer.write(err(r.payload))
                     await writer.drain()
                     return  # stream is not instructions; drop it
+                except RecursionError:
+                    # legal but absurdly deep nesting: refuse, don't die
+                    writer.write(err(b"instruction too deep"))
+                    await writer.drain()
+                    return
                 instr, buf = buf[:end], buf[end:]
                 stats.instruction("wire", instr)
                 ctx = Ctx(structures, world_root, stats)
@@ -107,6 +112,9 @@ async def handle(reader, writer, structures, world_root, stats):
                     stats.firing(ctx.nodes_fired, "value")
                 except Refusal as r:
                     response = err(r.payload)
+                    stats.firing(ctx.nodes_fired, "error")
+                except RecursionError:
+                    response = err(b"demand too deep")
                     stats.firing(ctx.nodes_fired, "error")
                 # The output returns to the demander -- the demand is the
                 # return path, and the output is itself an instruction.

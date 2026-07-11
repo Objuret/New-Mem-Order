@@ -97,4 +97,14 @@ python3 -m am.tool restore v1 OUT             # restore, verify, stats,
 python3 -m am.tool push HOST:PORT             # serve, push, mount
 ```
 
-Python 3.8+, stdlib only.
+Python 3.8+, stdlib only. FUSE phases need `fusepy`, which does NOT
+pip-install cleanly on recent Ubuntu — see PHASE3-STATE.md for the
+hand-install recipe; without it the five FUSE-dependent harnesses skip.
+
+`robustness_tests.py` pins hostile-input behavior (NUL references, deep
+nesting, garbage, traversal, corrupt heads → refusals/EIO, never a crash).
+
+`CRITICAL-REVIEW.md` (branch `claude/critical-build-review-42kzhx`) is an
+external adversarial audit; `RESPONSE-TO-REVIEW.md` and the ERRATA section
+at the top of REPORT.md are its answer — read those before quoting any
+headline number from this repo.

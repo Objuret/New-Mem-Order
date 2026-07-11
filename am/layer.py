@@ -135,6 +135,8 @@ class Layer:
             if r.payload.startswith(b"no such reference"):
                 raise LayerError(errno.ENOENT)
             raise LayerError(errno.EIO)
+        except RecursionError:
+            raise LayerError(errno.EIO)   # absurd chain depth: EIO, not crash
         return value
 
     def _op(self, name):
@@ -157,8 +159,14 @@ class Layer:
         this convention -- it wrote it). Returns (type, chain_ref, size,
         mtime_ns, mode)."""
         rendered = self._fire(demand(self._ref(path)))
-        t, chain, size, mtime, mode = rendered.split(b"\n")[:5]
-        return t, chain.decode(), int(size), int(mtime), int(mode)
+        fields = rendered.split(b"\n")
+        if len(fields) < 6:              # 5 fields, each "\n"-terminated
+            raise LayerError(errno.EIO)  # corrupt/short head: refuse the op
+        t, chain, size, mtime, mode = fields[:5]
+        try:
+            return t, chain.decode(), int(size), int(mtime), int(mode)
+        except (UnicodeDecodeError, ValueError):
+            raise LayerError(errno.EIO)
 
     def _head_bytes(self, ftype, chain_ref, size, mtime_ns, mode):
         return comp(CONCAT,
