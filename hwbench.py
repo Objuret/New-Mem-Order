@@ -179,40 +179,85 @@ def rapl_read(paths):
     return sum(int(open(os.path.join(p, "energy_uj")).read()) for p in paths)
 
 
+NOMINAL_V = 3.85     # used only when the battery reports current, not voltage
+
+
 def battery_state():
-    """(path, status) if the battery reports current and voltage
-    (Android exposes this to Termux); status matters: measurements
-    mean something only when Discharging."""
-    for b in ("/sys/class/power_supply/battery",
-              "/sys/class/power_supply/BAT0"):
+    """(kind, base, status, interval) for whatever battery telemetry this
+    machine allows; kind None if none. Measurements mean something only
+    when status is Discharging."""
+    base = "/sys/class/power_supply"
+    try:
+        cands = [os.path.join(base, d) for d in sorted(os.listdir(base))]
+    except OSError:                       # android: listing often denied
+        cands = [os.path.join(base, n)
+                 for n in ("battery", "BAT0", "BAT1", "bms")]
+    for b in cands:
         try:
             abs(int(open(b + "/current_now").read()))
-            int(open(b + "/voltage_now").read())
             status = open(b + "/status").read().strip()
-            return b, status
         except (OSError, ValueError):
             continue
-    return None, None
+        try:
+            int(open(b + "/voltage_now").read())
+            return "sysfs", b, status, 0.2
+        except (OSError, ValueError):
+            return "sysfs-novolt", b, status, 0.2
+    # android denies raw sysfs to apps; the Termux:API bridge still works
+    if shutil.which("termux-battery-status"):
+        try:
+            j = json.loads(subprocess.run(
+                ["termux-battery-status"], capture_output=True,
+                text=True, timeout=15).stdout)
+            if "current" in j and j.get("status"):
+                return "termux", None, j["status"].capitalize(), 1.0
+        except (OSError, ValueError, subprocess.TimeoutExpired):
+            pass
+    return None, None, None, None
+
+
+def make_power_reader(kind, base):
+    """Returns a zero-arg callable -> instantaneous watts (or None)."""
+    if kind == "sysfs":
+        def rd():
+            i = abs(int(open(base + "/current_now").read()))
+            v = int(open(base + "/voltage_now").read())
+            return i / 1e6 * v / 1e6          # uA x uV -> W
+    elif kind == "sysfs-novolt":
+        def rd():
+            i = abs(int(open(base + "/current_now").read()))
+            return i / 1e6 * NOMINAL_V
+    else:                                     # termux-battery-status
+        def rd():
+            j = json.loads(subprocess.run(
+                ["termux-battery-status"], capture_output=True,
+                text=True, timeout=15).stdout)
+            i = abs(float(j["current"]))
+            if i < 20000:                     # some devices report mA
+                i *= 1000
+            return i / 1e6 * NOMINAL_V
+    return rd
 
 
 class PowerSampler(threading.Thread):
-    """Samples battery current x voltage at 5 Hz -> mean watts."""
+    """Samples battery power -> mean watts over the sampled window."""
 
-    def __init__(self, base):
+    def __init__(self, reader, interval):
         super().__init__(daemon=True)
-        self.base = base
+        self.reader = reader
+        self.interval = interval
         self.samples = []
         self._stop = threading.Event()
 
     def run(self):
         while not self._stop.is_set():
             try:
-                i = abs(int(open(self.base + "/current_now").read()))
-                v = int(open(self.base + "/voltage_now").read())
-                self.samples.append(i / 1e6 * v / 1e6)   # uA x uV -> W
-            except (OSError, ValueError):
+                w = self.reader()
+                if w is not None:
+                    self.samples.append(w)
+            except Exception:
                 pass
-            self._stop.wait(0.2)
+            self._stop.wait(self.interval)
 
     def watts(self):
         self._stop.set()
@@ -220,10 +265,10 @@ class PowerSampler(threading.Thread):
         return sum(self.samples) / len(self.samples) if self.samples else None
 
 
-def watts_during(base, fn, min_seconds):
+def watts_during(reader, interval, fn, min_seconds):
     """Mean battery watts while fn() runs repeatedly for >= min_seconds.
-    Returns (watts, work_done)."""
-    s = PowerSampler(base)
+    Returns (watts, work_done, dt)."""
+    s = PowerSampler(reader, interval)
     s.start()
     t0 = time.monotonic()
     work = 0
@@ -233,7 +278,7 @@ def watts_during(base, fn, min_seconds):
     return s.watts(), work, dt
 
 
-def battery_energy(p, streams, base, block_s=15):
+def battery_energy(p, streams, reader, interval, block_s=15):
     """The phone's own energy verdict: sustained all-core runs of each
     representation while the battery reports drain; idle baseline
     subtracted; ABBA (raw am am raw) so thermal/battery drift cannot
@@ -248,9 +293,12 @@ def battery_energy(p, streams, base, block_s=15):
             for pr in procs:
                 pr.communicate()
             return N * 10 * streams
-        return watts_during(base, one, block_s)
+        return watts_during(reader, interval, one, block_s)
 
-    idle_w, _, _ = watts_during(base, lambda: time.sleep(0.5) or 0, 6)
+    idle_w, _, _ = watts_during(reader, interval,
+                                lambda: time.sleep(0.5) or 0, 8)
+    if idle_w is None:
+        return {}
     runs = [(m,) + block(m) for m in ("raw", "am", "am", "raw")]
     out = {}
     for mode, pair in (("raw", (runs[0], runs[3])), ("am", (runs[1], runs[2]))):
@@ -300,13 +348,16 @@ def main():
     cores = os.cpu_count() or 1
     tool, why = counter_tool()
     rapl = rapl_paths()
-    batt, batt_status = battery_state()
+    bkind, bbase, batt_status, binterval = battery_state()
+    on_android = os.path.exists("/system/bin")
     print("machine: %s, %d cores" % (cpu_name(), cores))
     if N < 2_000_000:
         print("CAUTION: n=%d is small — per-pass times get noise-dominated;"
               " trust the default 4M for the verdict" % N)
     energy_src = ("RAPL" if rapl else
-                  "battery (%s)" % batt_status if batt else "unavailable")
+                  "battery via %s (%s)" % (bkind, batt_status) if bkind else
+                  "unavailable — install the Termux:API app (F-Droid) and "
+                  "`pkg install termux-api`" if on_android else "unavailable")
     print("counters: %s   energy: %s\n"
           % ("real PMU via %s" % ("perf" if tool == "perf" else "simpleperf")
              if tool else "unavailable (%s)" % why, energy_src))
@@ -348,12 +399,13 @@ def main():
 
     # ---- the energy tiebreaker (battery-powered machines) ------------------
     energy = {}
-    if not rapl and batt:
-        if batt_status == "Discharging":
+    if not rapl and bkind:
+        if (batt_status or "").lower() == "discharging":
             print("\nbattery energy, all cores, memory-bound kernel "
                   "(don't touch the phone; ~3 min):")
+            reader = make_power_reader(bkind, bbase)
             for p in (0, 99):
-                energy[p] = battery_energy(p, cores, batt)
+                energy[p] = battery_energy(p, cores, reader, binterval)
                 e = energy[p]
                 if "raw" in e and "am" in e:
                     print("p=%3d%%  J/Grec above idle (%.2f W): "
