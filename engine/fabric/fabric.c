@@ -6,6 +6,17 @@ void nmo_arrive(nmo_fabric *f, uint32_t tag, uint32_t name, uint64_t x) {
     nmo_arrive_inl(f, tag, name, x);
 }
 
+/* The dispatch primitive, as its own symbol: edge handoff to road
+ * entry, whole function. G1's instruction budget is asserted against
+ * THIS - the thing the gate polices is that arrival->road stays one
+ * indirect hop with nothing living around it. nmo_arrive_at uses the
+ * identical construct inline; its other paths are layer-5 replay
+ * (conclusions that never reach a road), not dispatch. */
+void nmo_road_entry(nmo_fabric *f, uint32_t tag, uint64_t x) {
+    nmo_road *r = &f->roads[tag];
+    r->fn(f, r->tree, x);
+}
+
 /* The single slow road (layer 1): one operation at a time over the
  * tree form. Novel shapes are answered here while the edge paves
  * them; if no paver exists, this road serves forever, correctly. */

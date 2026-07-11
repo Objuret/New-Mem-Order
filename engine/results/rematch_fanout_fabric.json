@@ -1,0 +1,7 @@
+{"niche_rematch":{
+ "stream":{"events":98733,"tags":688,"entropy_before":4.555,"entropy_after":4.555},
+ "machine_account":{"paved+matrix":{"mean":3.71,"min":2.94,"max":4.41}},
+ "baseline_account":{"bl_switch":{"mean":4.27,"min":3.93,"max":4.86},"bl_hashed":{"mean":4.88,"min":4.36,"max":5.55}},
+ "ablation_no_fabric":{"bl_named":{"mean":2.61,"min":1.97,"max":3.61}},
+ "emulation_account":{"paving_ms":3531.1,"baseline_build_ms":2595.8},
+ "opponent":"bl_switch","verdict":"INCONCLUSIVE"}}

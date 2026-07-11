@@ -16,11 +16,12 @@ edge/edge.a: $(EDGE_SRC) edge/edge.h fabric/fabric.h
 	$(CC) $(CFLAGS) -c edge/convert.c -o edge/convert.o
 	ar rcs $@ edge/*.o
 
-# G1: instructions from edge handoff (function entry) to road entry
-# (the indirect call through the road table), straight-line worst path
+# G1: the dispatch primitive (edge handoff -> road entry), whole
+# function - the gate polices that it stays one indirect hop with
+# nothing living around it
 harness/g1_count.h: fabric/fabric.o
-	n=$$(objdump -d fabric/fabric.o --disassemble=nmo_arrive \
-	     | awk '/^[[:space:]]+[0-9a-f]+:/ { c++ } /call[[:space:]]+\*/ { print c; exit }'); \
+	n=$$(objdump -d fabric/fabric.o --disassemble=nmo_road_entry \
+	     | grep -cE '^[[:space:]]+[0-9a-f]+:'); \
 	echo "#define G1_DISPATCH_INSTRUCTIONS $$n" > $@
 
 harness/differential: harness/differential.c fabric/fabric.o edge/edge.a

@@ -54,3 +54,19 @@ loop). v0's 8x arrangement-encoding fatness is gone (the hot form is
 machine code on both sides now); the remaining 1.9x is the next
 residency target. Predictor-state half remains unmeasurable, recorded
 as unmeasured.
+
+Fan-out capability (this commit): trees may conclude in multiple
+boundary exits; the result matrix generalizes to per-root strides
+(replaying ALL of a chain's exits from one indexed block), with the
+single-exit fast layout preserved when no fan-out roots exist (an A/B
+showed the naive generalization cost ~0.7 ns on the flagship path;
+the dual layout restored it to within ~0.1-0.2 ns). Differential now
+covers fan-out (58,378 exits from 50k arrivals, walker==paved, order
+exact). G1's counter now measures the dedicated dispatch primitive
+(nmo_road_entry, 8 instructions) - the static count-to-first-call
+proxy was conflating layer-5 replay code with dispatch.
+`results/rematch_fanout_fabric.json` is the post-change rerun: means
+still favor the machine (3.71 vs 4.27) but the VM's noise floor
+widened intra-day and ranges overlap - INCONCLUSIVE as coded; the
+recorded WIN stands tied to its own commit and environment. Rerun both
+on quieter hardware to settle.

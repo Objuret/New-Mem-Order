@@ -110,20 +110,25 @@ static int emit_baseline(const nmo_tree *trees, uint32_t nt,
 }
 
 typedef struct { double mean, min, max; } stat_t;
-
+static int dcmp(const void *a, const void *b) {
+    double x = *(const double *)a - *(const double *)b;
+    return x < 0 ? -1 : x > 0;
+}
+/* symmetric trim (as in circulate): best and worst rep of EVERY
+ * variant dropped before ranges compare; declared pre-verdict */
 static stat_t timeit(int reps, size_t n, void (*run)(void *), void *ctx) {
-    stat_t s = { 0, 1e18, 0 };
-    run(ctx);                     /* self-warm: eviction by the prior
-                                     variant is not this variant's cost */
+    double d[64];
+    if (reps > 64) reps = 64;
+    run(ctx);                     /* self-warm */
     for (int r = 0; r < reps; r++) {
         double t0 = now_ns();
         run(ctx);
-        double d = (now_ns() - t0) / (double)n;
-        s.mean += d;
-        if (d < s.min) s.min = d;
-        if (d > s.max) s.max = d;
+        d[r] = (now_ns() - t0) / (double)n;
     }
-    s.mean /= reps;
+    qsort(d, reps, sizeof(double), dcmp);
+    stat_t s = { 0, d[1], d[reps - 2] };
+    for (int r = 1; r < reps - 1; r++) s.mean += d[r];
+    s.mean /= reps - 2;
     return s;
 }
 

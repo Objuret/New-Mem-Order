@@ -79,9 +79,40 @@ nmo_fabric *nmo_plant(const nmo_tree *trees, uint32_t ntrees,
     f->name_span = name_span;
     f->exit_at = exit_region;
     if (name_span) {
-        f->matrix = malloc((size_t)ntags * name_span * 8);
+        /* only DAG roots receive named arrivals; interior trees are
+         * fed nameless values road-to-road and get no matrix */
+        uint8_t *targeted = calloc(ntags, 1);
+        for (uint32_t i = 0; i < ntrees; i++)
+            for (uint16_t p = 0; p < trees[i].nexits; p++)
+                if (trees[i].exit_to[p] != NMO_EXIT_BOUNDARY)
+                    targeted[trees[i].exit_to[p]] = 1;
         f->matrix_known = calloc((size_t)ntags * name_span, 1);
-        f->matrix_ok = calloc(ntags, 1);
+        int any_multi = 0;
+        for (uint32_t i = 0; i < ntrees; i++)
+            if (!targeted[trees[i].tag] && nexit_of[trees[i].tag] > 1)
+                any_multi = 1;
+        if (!any_multi) {
+            /* fast layout: matrix[tag*span + name], one conclusion */
+            f->matrix_ok = calloc(ntags, 1);
+            for (uint32_t i = 0; i < ntrees; i++)
+                if (!targeted[trees[i].tag]
+                    && nexit_of[trees[i].tag] == 1)
+                    f->matrix_ok[trees[i].tag] = 1;
+            f->matrix = malloc((size_t)ntags * name_span * 8);
+        } else {
+            f->matrix_meta = calloc(ntags, 8);
+            uint64_t total = 0;
+            for (uint32_t i = 0; i < ntrees; i++) {
+                uint32_t tag = trees[i].tag;
+                int ne = nexit_of[tag];
+                if (!targeted[tag] && ne >= 1 && ne <= NMO_MAX_EXITS) {
+                    f->matrix_meta[tag] = (total << 4) | (uint64_t)ne;
+                    total += (uint64_t)name_span * ne;
+                }
+            }
+            f->matrix = malloc(total * 8);
+        }
+        free(targeted);
     }
 
     nmo_tree *copy = calloc(ntrees, sizeof(nmo_tree));
@@ -90,11 +121,6 @@ nmo_fabric *nmo_plant(const nmo_tree *trees, uint32_t ntrees,
         uint32_t tag = copy[i].tag;
         f->roads[tag].fn = nmo_walk_road;   /* slow road until paved */
         f->roads[tag].tree = &copy[i];
-        /* result matrix where identity arrives AND the whole chain
-         * concludes in exactly one boundary exit: recurrence of the
-         * entry name then rides as one load for the entire chain */
-        if (name_span && nexit_of[tag] == 1)
-            f->matrix_ok[tag] = 1;
     }
     free(nexit_of);
     return f;
@@ -108,6 +134,7 @@ void nmo_unplant(nmo_fabric *f) {
         if (f->roads[t].tree && (!base || f->roads[t].tree < base))
             base = f->roads[t].tree;
     free((void *)base);
-    free(f->matrix); free(f->matrix_known); free(f->matrix_ok);
+    free(f->matrix); free(f->matrix_meta);
+    free(f->matrix_ok); free(f->matrix_known);
     free(f->roads); free(f);
 }

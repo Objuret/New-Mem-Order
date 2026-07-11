@@ -164,3 +164,18 @@ It is PRIOR ART, nothing more:
   residual 1.9x is per-road prologues + table-indirect calls vs one
   shared switch loop. Remaining open directions: fan-out trees,
   richer payloads at the edge, the 1.9x residency gap.
+- 2026-07-11, fan-out capability BUILT and lawful: multi-exit
+  conclusions supported end-to-end (walker/paved/matrix); result
+  matrix generalized to per-root strides with the single-exit fast
+  layout preserved (naive generalization cost 0.7ns on the flagship
+  path - caught by in-session A/B, fixed via dual layout, residual
+  ~0.1-0.2ns). Matrix restricted to DAG roots (interior trees receive
+  nameless values, correctly get no matrix). G1 now asserts on the
+  dedicated dispatch primitive nmo_road_entry (8 instructions).
+  Differential covers fan-out. NOTE: VM noise floor widened intra-day
+  (consecutive identical runs swing 25%); post-change rematch means
+  favor the machine (3.71 vs 4.27) but ranges overlap - INCONCLUSIVE
+  as coded, recorded beside the standing WIN. NEXT: the fan-out
+  engagement harness (fanout.c: entry tree -> two boundary trees, vs
+  pipeline/fused/fused_hashed, machine with strided matrix), then
+  richer payloads at the edge.

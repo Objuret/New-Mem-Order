@@ -84,11 +84,16 @@ struct nmo_fabric {
     uint32_t ntags;
     /* the boundary: exit values land here, in arrival order (G2) */
     uint64_t *exit_at;
-    /* the result matrix (layer 5): one flat block indexed by
-     * (tag, carried name) - a concluded arrival is one load */
+    /* the result matrix (layer 5): a concluded arrival replays ALL
+     * its chain's boundary exits from one indexed block; stride =
+     * exits per firing of that tag's chain (0 = no matrix) */
     uint64_t *matrix;
-    uint8_t *matrix_known;
-    uint8_t *matrix_ok;         /* tag eligible (single boundary exit) */
+    uint64_t *matrix_meta;      /* tag -> (offset << 4) | stride; NULL
+                                   when every root is single-exit and
+                                   the matrix is indexed by (tag,name)
+                                   directly */
+    uint8_t *matrix_ok;         /* single-exit layout: tag eligible */
+    uint8_t *matrix_known;      /* (tag, name) -> concluded */
     uint32_t name_span;         /* names >= span bypass the matrix */
 };
 
@@ -98,26 +103,53 @@ struct nmo_fabric {
 static inline uint64_t *nmo_arrive_at(nmo_fabric *f, uint32_t tag,
                                       uint32_t name, uint64_t x,
                                       uint64_t *at) {
-    if (f->matrix && name < f->name_span) {
-        uint64_t k = (uint64_t)tag * f->name_span + name;
-        if (f->matrix_known[k]) {
-            *at++ = f->matrix[k];
-            return at;
-        }
+    if (!f->matrix || name >= f->name_span) {
         f->exit_at = at;
         nmo_road *r = &f->roads[tag];
-        r->fn(f, r->tree, x);
-        at = f->exit_at;
-        if (f->matrix_ok[tag]) {
-            f->matrix[k] = at[-1];
-            f->matrix_known[k] = 1;
+        r->fn(f, r->tree, x);            /* the one indirect dispatch */
+        return f->exit_at;
+    }
+    {
+        uint64_t kn = (uint64_t)tag * f->name_span + name;
+        if (!f->matrix_meta) {          /* every root concludes once */
+            if (f->matrix_known[kn]) {
+                *at++ = f->matrix[kn];
+                return at;
+            }
+            f->exit_at = at;
+            nmo_road *r = &f->roads[tag];
+            r->fn(f, r->tree, x);
+            at = f->exit_at;
+            if (f->matrix_ok[tag]) {
+                f->matrix[kn] = at[-1];
+                f->matrix_known[kn] = 1;
+            }
+            return at;
         }
-        return at;
+        uint64_t meta = f->matrix_meta[tag];
+        uint32_t st = (uint32_t)(meta & 15);
+        if (st) {
+            uint64_t k = (meta >> 4) + (uint64_t)name * st;
+            if (f->matrix_known[kn]) {
+                for (uint32_t j = 0; j < st; j++)
+                    *at++ = f->matrix[k + j];
+                return at;
+            }
+            f->exit_at = at;
+            nmo_road *r = &f->roads[tag];
+            r->fn(f, r->tree, x);
+            at = f->exit_at;
+            for (uint32_t j = 0; j < st; j++)
+                f->matrix[k + j] = (at - st)[j];
+            f->matrix_known[kn] = 1;
+            return at;
+        }
     }
     f->exit_at = at;
     nmo_road *r = &f->roads[tag];
     r->fn(f, r->tree, x);
     return f->exit_at;
+    /* (matrix layouts above; a tag with no matrix falls through) */
 }
 
 static inline void nmo_arrive_inl(nmo_fabric *f, uint32_t tag,
@@ -126,6 +158,7 @@ static inline void nmo_arrive_inl(nmo_fabric *f, uint32_t tag,
 }
 
 void nmo_arrive(nmo_fabric *f, uint32_t tag, uint32_t name, uint64_t x);
+void nmo_road_entry(nmo_fabric *f, uint32_t tag, uint64_t x);
 
 /* the single slow road: one generic walker, fabric-resident */
 void nmo_walk_road(nmo_fabric *f, const nmo_tree *t, uint64_t x);

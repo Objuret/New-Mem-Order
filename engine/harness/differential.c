@@ -41,9 +41,15 @@ static void gen_tree(nmo_tree *t, uint32_t tag, uint32_t exit_to) {
 int main(void) {
     const uint32_t NT = 24, M = 50000;
     nmo_tree trees[24];
-    /* tags 0..19 boundary; 20..23 feed a boundary tree (circulation) */
+    /* tags 0..19 boundary; 20..23 fan out: one exit feeds a boundary
+     * tree (circulation), a second exits the boundary directly */
     for (uint32_t t = 0; t < 20; t++) gen_tree(&trees[t], t, NMO_EXIT_BOUNDARY);
-    for (uint32_t t = 20; t < NT; t++) gen_tree(&trees[t], t, t - 20);
+    for (uint32_t t = 20; t < NT; t++) {
+        gen_tree(&trees[t], t, t - 20);
+        trees[t].nexits = 2;
+        trees[t].exits[1] = (uint16_t)(trees[t].nnodes / 2);
+        trees[t].exit_to[1] = NMO_EXIT_BOUNDARY;
+    }
 
     nmo_arrival *arr = malloc(M * sizeof(*arr));
     nmo_namer *nm = nmo_namer_new();
@@ -55,7 +61,7 @@ int main(void) {
     uint32_t span = nmo_name_count(nm);
 
     uint64_t *ex[4];
-    for (int k = 0; k < 4; k++) ex[k] = calloc(M + 8, 8);
+    for (int k = 0; k < 4; k++) ex[k] = calloc((size_t)M * 2 + 8, 8);
     size_t nex[4];
 
     for (int k = 0; k < 4; k++) {       /* walker/paved x matrix off/on */
@@ -74,7 +80,7 @@ int main(void) {
         CHECK(!memcmp(ex[k], ex[0], nex[0] * 8),
               "exit stream differs (order or value)");
     }
-    CHECK(nex[0] == M, "one exit per arrival, in arrival order");
+    CHECK(nex[0] > M, "fan-out must add exits");
 
     /* invalid trees rejected at the door */
     nmo_tree bad;
