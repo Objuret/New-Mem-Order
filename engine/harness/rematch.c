@@ -204,7 +204,7 @@ int main(int argc, char **argv) {
     b.hu = calloc((size_t)s.ntags * 4096, 1);
     for (size_t i = 0; i < s.n; i++) {
         b.tg[i] = s.arr[i].tag;
-        b.vl[i] = s.arr[i].val;
+        b.vl[i] = s.arr[i].val[0];
         b.nm[i] = s.arr[i].name;
     }
 

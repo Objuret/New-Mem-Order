@@ -19,8 +19,15 @@ static void gen_tree(nmo_tree *t, uint32_t tag, uint32_t exit_to) {
     memset(t, 0, sizeof(*t));
     t->tag = tag;
     t->nnodes = (uint16_t)(4 + rnd() % 60);
-    t->nodes[0].op = NMO_OP_INPUT;
-    for (uint16_t i = 1; i < t->nnodes; i++) {
+    t->nodes[0].op = NMO_OP_INPUT;               /* slot 0 (default) */
+    t->nodes[1].op = NMO_OP_INPUT;
+    t->nodes[1].slot = 1;                        /* every tree also
+                                                     addresses slot 1,
+                                                     so multi-slot
+                                                     dispatch is on the
+                                                     differential path,
+                                                     not a side case */
+    for (uint16_t i = 2; i < t->nnodes; i++) {
         uint32_t roll = (uint32_t)(rnd() % 100);
         nmo_node *nd = &t->nodes[i];
         if (roll < 15) { nd->op = NMO_OP_CONST; nd->imm = rnd(); }
@@ -55,8 +62,9 @@ int main(void) {
     nmo_namer *nm = nmo_namer_new();
     for (uint32_t i = 0; i < M; i++) {
         arr[i].tag = (uint32_t)(rnd() % NT);
-        arr[i].val = rnd() % 4096;      /* recurrence-heavy */
-        arr[i].name = nmo_name(nm, arr[i].val, 0);
+        arr[i].val[0] = rnd() % 4096;    /* recurrence-heavy */
+        arr[i].val[1] = rnd() % 4096;    /* slot 1, independent stream */
+        arr[i].name = nmo_name(nm, arr[i].val[0], 0);
     }
     uint32_t span = nmo_name_count(nm);
 

@@ -20,12 +20,33 @@ int nmo_tree_valid(const nmo_tree *t, uint32_t ntags) {
         if (ar >= 1 && t->nodes[i].a >= i) return -5;
         if (ar >= 2 && t->nodes[i].b >= i) return -5;
         if (ar >= 3 && t->nodes[i].c >= i) return -5;
+        if (t->nodes[i].op == NMO_OP_INPUT
+            && t->nodes[i].slot >= NMO_MAX_SLOTS) return -8;
     }
     for (uint16_t p = 0; p < t->nexits; p++) {
         if (t->exits[p] >= t->nnodes) return -6;
         uint32_t to = t->exit_to[p];
         if (to != NMO_EXIT_BOUNDARY && to >= ntags) return -7;
     }
+    return 0;
+}
+
+/* A road-to-road handoff always forwards its single conclusion into
+ * slot 0 of the next tree and zero-fills the rest (fabric.c) - so an
+ * INTERIOR tree's use of another slot is constant, contributing no
+ * information beyond what the entry root's own slots already carry.
+ * Only the ENTRY root's OWN input nodes can make its conclusion
+ * depend on something the carried name (derived from slot 0 alone at
+ * the edge) does not capture. A root that reads another slot is
+ * therefore not safe to memoize by name - identity doesn't cover what
+ * its output actually depends on - so it is excluded from the result
+ * matrix and always computes fresh. Correct default, not a shortcut:
+ * G3 says identity is carried, never derived; a tag whose output
+ * needs more than the carried identity simply isn't a candidate. */
+static int root_uses_other_slot(const nmo_tree *t) {
+    for (uint16_t i = 0; i < t->nnodes; i++)
+        if (t->nodes[i].op == NMO_OP_INPUT && t->nodes[i].slot != 0)
+            return 1;
     return 0;
 }
 
@@ -96,7 +117,8 @@ nmo_fabric *nmo_plant(const nmo_tree *trees, uint32_t ntrees,
             f->matrix_ok = calloc(ntags, 1);
             for (uint32_t i = 0; i < ntrees; i++)
                 if (!targeted[trees[i].tag]
-                    && nexit_of[trees[i].tag] == 1)
+                    && nexit_of[trees[i].tag] == 1
+                    && !root_uses_other_slot(&trees[i]))
                     f->matrix_ok[trees[i].tag] = 1;
             f->matrix = malloc((size_t)ntags * name_span * 8);
         } else {
@@ -105,7 +127,8 @@ nmo_fabric *nmo_plant(const nmo_tree *trees, uint32_t ntrees,
             for (uint32_t i = 0; i < ntrees; i++) {
                 uint32_t tag = trees[i].tag;
                 int ne = nexit_of[tag];
-                if (!targeted[tag] && ne >= 1 && ne <= NMO_MAX_EXITS) {
+                if (!targeted[tag] && ne >= 1 && ne <= NMO_MAX_EXITS
+                    && !root_uses_other_slot(&trees[i])) {
                     f->matrix_meta[tag] = (total << 4) | (uint64_t)ne;
                     total += (uint64_t)name_span * ne;
                 }

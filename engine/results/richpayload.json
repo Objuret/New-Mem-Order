@@ -1,0 +1,5 @@
+{"richpayload":{
+ "stream":{"events":98733,"tags":688,"slot1_nonzero_fraction":0.7898},
+ "machine_account":[{"cfg":"walker","matrix_attached":false,"ns_per_event":{"mean":30.79,"min":30.59,"max":31.05}},{"cfg":"paved","matrix_attached":false,"ns_per_event":{"mean":5.07,"min":4.50,"max":5.63}},{"cfg":"paved+matrix","matrix_attached":false,"ns_per_event":{"mean":6.30,"min":6.02,"max":6.81}}],
+ "baseline_account":{"bl_switch":{"mean":4.47,"min":4.19,"max":5.21}},
+ "note":"result matrix ineligible by design when a root reads a slot beyond 0 (identity is carried from slot 0 alone); paved+matrix equals paved here, honestly, not a bug"}}

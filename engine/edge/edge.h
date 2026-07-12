@@ -32,11 +32,14 @@ size_t nmo_chan_recv(nmo_chan *c, uint64_t *vals, size_t cap);
 uint64_t nmo_chan_bytes(const nmo_chan *c);
 
 /* convert.c - world -> arrivals, shape preserved (G5): emits
- * entropy_before and entropy_after side by side, always */
+ * entropy_before and entropy_after side by side, always. val[] carries
+ * up to NMO_MAX_SLOTS independent values per event (richer than a
+ * single u64 - real events are not one number); identity (name) is
+ * carried from val[0] as before. */
 typedef struct {
     uint32_t tag;
     uint32_t name;
-    uint64_t val;
+    uint64_t val[NMO_MAX_SLOTS];
 } nmo_arrival;
 
 typedef struct {

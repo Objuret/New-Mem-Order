@@ -184,6 +184,30 @@ It is PRIOR ART, nothing more:
   strongest conventional fused+hash 4.73: WIN, trimmed ranges
   disjoint, despite the noisy VM. Scoreboard: routing WIN, circulation
   WIN (depth-flat), fan-out WIN; claim 4 open on the 1.9x residency
-  gap; claim 5 parked. NEXT: richer payloads at the edge (multi-slot
-  records - real events carry more than one value), then the 1.9x
-  residency gap, then re-verdict everything on quiet hardware.
+  gap; claim 5 parked.
+- 2026-07-12 (session continued under Sonnet 5 after a mid-session
+  /model switch - same branch, same discipline): richer-than-u64
+  payloads BUILT and lawful. Arrivals now carry NMO_MAX_SLOTS=2
+  independent values; an INPUT node addresses one by index; the edge
+  parses a real second value from strace (arg0, where numeric)
+  alongside the return value - 79% of real events carry a genuinely
+  nonzero second slot. `kernel_rich`'s short-transfer fork
+  (ret < arg0) needs both slots alive at once, unbuildable from one
+  carried u64. REAL FINDING, caught by the differential before
+  anything shipped: the result matrix keys recurrence on the carried
+  name (slot 0 alone), so a root reading another slot could replay a
+  stale conclusion for a repeated name. Fixed at the correct layer
+  (plant.c: root_uses_other_slot) - any root reading a slot beyond 0
+  is matrix-ineligible and always computes fresh; G3 ("identity is
+  carried, never derived") applied honestly means a tag needing more
+  than the carried identity isn't a memoization candidate. Verified in
+  the recorded run (`matrix_attached: false` throughout). All four
+  pre-existing engagements use only slot-0 kernels, are unaffected,
+  and their recorded verdicts stand (spot-checked after the change:
+  measure/rematch/circulate WIN, fanout INCONCLUSIVE matching the
+  already-documented VM-noise pattern, not a regression). Second
+  honest finding: paved+matrix costs ~1.2ns more than plain paved even
+  with the matrix inactive - the bookkeeping arrays still exist and
+  cost a branch; named, not hidden. See engine/results/richpayload.json.
+  NEXT: the 1.9x residency gap, then re-verdict everything on quiet
+  hardware.

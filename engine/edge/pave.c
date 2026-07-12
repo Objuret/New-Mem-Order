@@ -19,12 +19,12 @@ static const char *binop_expr(uint8_t op) {
 
 static void emit_road(FILE *o, const nmo_tree *t) {
     fprintf(o, "void nmo_paved_%u(nmo_fabric *f, const nmo_tree *t,"
-               " uint64_t x) {\n  (void)t;\n", t->tag);
+               " const uint64_t *x) {\n  (void)t;\n", t->tag);
     for (uint16_t i = 0; i < t->nnodes; i++) {
         const nmo_node *nd = &t->nodes[i];
         switch (nd->op) {
         case NMO_OP_INPUT:
-            fprintf(o, "  uint64_t v%u = x;\n", i); break;
+            fprintf(o, "  uint64_t v%u = x[%u];\n", i, nd->slot); break;
         case NMO_OP_CONST:
             fprintf(o, "  uint64_t v%u = 0x%016llxULL;\n", i,
                     (unsigned long long)nd->imm); break;
@@ -42,8 +42,10 @@ static void emit_road(FILE *o, const nmo_tree *t) {
         if (to == NMO_EXIT_BOUNDARY)
             fprintf(o, "  *f->exit_at++ = v%u;\n", t->exits[p]);
         else
-            fprintf(o, "  { nmo_road *r = &f->roads[%uu];"
-                       " r->fn(f, r->tree, v%u); }\n", to, t->exits[p]);
+            fprintf(o, "  { uint64_t next%u[%d] = { v%u };"
+                       " nmo_road *r = &f->roads[%uu];"
+                       " r->fn(f, r->tree, next%u); }\n",
+                    p, NMO_MAX_SLOTS, t->exits[p], to, p);
     }
     fprintf(o, "}\n");
 }

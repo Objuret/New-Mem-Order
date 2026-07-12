@@ -2,7 +2,8 @@
  * here for administration to live in. */
 #include "fabric.h"
 
-void nmo_arrive(nmo_fabric *f, uint32_t tag, uint32_t name, uint64_t x) {
+void nmo_arrive(nmo_fabric *f, uint32_t tag, uint32_t name,
+               const uint64_t *x) {
     nmo_arrive_inl(f, tag, name, x);
 }
 
@@ -12,7 +13,7 @@ void nmo_arrive(nmo_fabric *f, uint32_t tag, uint32_t name, uint64_t x) {
  * indirect hop with nothing living around it. nmo_arrive_at uses the
  * identical construct inline; its other paths are layer-5 replay
  * (conclusions that never reach a road), not dispatch. */
-void nmo_road_entry(nmo_fabric *f, uint32_t tag, uint64_t x) {
+void nmo_road_entry(nmo_fabric *f, uint32_t tag, const uint64_t *x) {
     nmo_road *r = &f->roads[tag];
     r->fn(f, r->tree, x);
 }
@@ -20,13 +21,13 @@ void nmo_road_entry(nmo_fabric *f, uint32_t tag, uint64_t x) {
 /* The single slow road (layer 1): one operation at a time over the
  * tree form. Novel shapes are answered here while the edge paves
  * them; if no paver exists, this road serves forever, correctly. */
-void nmo_walk_road(nmo_fabric *f, const nmo_tree *t, uint64_t x) {
+void nmo_walk_road(nmo_fabric *f, const nmo_tree *t, const uint64_t *x) {
     uint64_t vals[NMO_MAX_NODES];
     for (uint16_t i = 0; i < t->nnodes; i++) {
         const nmo_node *nd = &t->nodes[i];
         uint64_t v;
         switch (nd->op) {
-        case NMO_OP_INPUT: v = x; break;
+        case NMO_OP_INPUT: v = x[nd->slot]; break;
         case NMO_OP_CONST: v = nd->imm; break;
         case NMO_OP_SELECT:
             v = vals[nd->a] ? vals[nd->b] : vals[nd->c]; break;
@@ -49,9 +50,14 @@ void nmo_walk_road(nmo_fabric *f, const nmo_tree *t, uint64_t x) {
         } else {
             /* trees feed trees inside residence (layer 4): the value
              * moves road-to-road without a name, without an address,
-             * without crossing anything */
+             * without crossing anything. An interior handoff carries
+             * one conclusion, landing in slot 0 of the fed tree; other
+             * slots are zero (this tree spoke only one value forward -
+             * a fed tree that needs more must be reached from the edge
+             * as a fresh arrival, not through circulation). */
+            uint64_t next[NMO_MAX_SLOTS] = { v };
             nmo_road *r = &f->roads[to];
-            r->fn(f, r->tree, v);
+            r->fn(f, r->tree, next);
         }
     }
 }

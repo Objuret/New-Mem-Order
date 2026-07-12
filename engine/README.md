@@ -79,3 +79,26 @@ intermediates vs the machine's 0). Full machine (strided matrix
 replaying both conclusions from the carried name) 3.58 vs strongest
 conventional fused+hash-memo 4.73 — **coded verdict: WIN, trimmed
 ranges disjoint**, even on the day's noisy VM.
+
+Richer-than-u64 payloads (`results/richpayload.json`): arrivals now
+carry `NMO_MAX_SLOTS=2` independent values (an INPUT node addresses
+one by index); the edge parses a real second value from strace (the
+first argument, where it's numeric) alongside the return value - 79%
+of real events carry a genuinely nonzero second slot, not a degenerate
+one. `kernel_rich`'s short-transfer fork (`ret < arg0`) needs both
+slots alive at once and is unbuildable from one carried u64 at all.
+Building this exposed a real semantic gap, caught by the differential
+before anything shipped: the result matrix keys recurrence on the
+carried name (derived from slot 0 alone), so a root reading another
+slot can produce a different output for a repeated name - the matrix
+would silently replay a stale conclusion. Fixed at the correct layer
+(plant.c): any root whose own tree reads a slot beyond 0 is marked
+matrix-ineligible and always computes fresh - G3's "identity is
+carried, never derived" applied honestly means a tag whose output
+needs more than the carried identity isn't a memoization candidate.
+`matrix_attached: false` in the recorded run confirms the fix engaged;
+all four pre-existing engagements (measure/rematch/circulate/fanout)
+use only slot-0 kernels and are unaffected - their recorded verdicts
+stand. One more honest finding from this run: `paved+matrix` costs
+~1.2ns MORE than plain `paved` even with the matrix inactive - the
+bookkeeping arrays still exist and cost a branch; named, not hidden.

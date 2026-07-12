@@ -47,12 +47,20 @@ typedef enum {
 #define NMO_MAX_NODES 256
 #define NMO_MAX_EXITS 8
 
+/* richer-than-u64 payloads: an arrival carries this many independent
+ * values; an INPUT node addresses one by index. Real events are not
+ * one number - a syscall has a return value AND arguments - and a
+ * kernel that needs two of them alive at once (a value-fork between
+ * them) cannot be built on a single carried u64 at all. */
+#define NMO_MAX_SLOTS 2
+
 /* an exit either leaves the machine (boundary) or feeds another tree
  * in residence (layer 4: circulation is real) */
 #define NMO_EXIT_BOUNDARY 0xFFFFFFFFu
 
 typedef struct {
     uint8_t op;
+    uint8_t slot;           /* NMO_OP_INPUT only: which arrival slot */
     uint16_t a, b, c;       /* operand nodes; always earlier nodes */
     uint64_t imm;           /* NMO_OP_CONST only */
 } nmo_node;
@@ -69,10 +77,11 @@ typedef struct {
 /* ---- the fabric ---- */
 typedef struct nmo_fabric nmo_fabric;
 
-/* a road takes the fabric and the arriving value; the tree pointer
- * lets one generic walker serve any unpaved road (the single slow
- * road, layer 1) while paved roads ignore it */
-typedef void (*nmo_road_fn)(nmo_fabric *, const nmo_tree *, uint64_t);
+/* a road takes the fabric and a pointer to the arriving slots; the
+ * tree pointer lets one generic walker serve any unpaved road (the
+ * single slow road, layer 1) while paved roads ignore it */
+typedef void (*nmo_road_fn)(nmo_fabric *, const nmo_tree *,
+                            const uint64_t *);
 
 typedef struct {
     nmo_road_fn fn;
@@ -101,7 +110,7 @@ struct nmo_fabric {
  * dispatch from here to road entry (G1). The exit cursor travels by
  * value so concluded arrivals never touch fabric state. */
 static inline uint64_t *nmo_arrive_at(nmo_fabric *f, uint32_t tag,
-                                      uint32_t name, uint64_t x,
+                                      uint32_t name, const uint64_t *x,
                                       uint64_t *at) {
     if (!f->matrix || name >= f->name_span) {
         f->exit_at = at;
@@ -153,14 +162,15 @@ static inline uint64_t *nmo_arrive_at(nmo_fabric *f, uint32_t tag,
 }
 
 static inline void nmo_arrive_inl(nmo_fabric *f, uint32_t tag,
-                                  uint32_t name, uint64_t x) {
+                                  uint32_t name, const uint64_t *x) {
     f->exit_at = nmo_arrive_at(f, tag, name, x, f->exit_at);
 }
 
-void nmo_arrive(nmo_fabric *f, uint32_t tag, uint32_t name, uint64_t x);
-void nmo_road_entry(nmo_fabric *f, uint32_t tag, uint64_t x);
+void nmo_arrive(nmo_fabric *f, uint32_t tag, uint32_t name,
+               const uint64_t *x);
+void nmo_road_entry(nmo_fabric *f, uint32_t tag, const uint64_t *x);
 
 /* the single slow road: one generic walker, fabric-resident */
-void nmo_walk_road(nmo_fabric *f, const nmo_tree *t, uint64_t x);
+void nmo_walk_road(nmo_fabric *f, const nmo_tree *t, const uint64_t *x);
 
 #endif

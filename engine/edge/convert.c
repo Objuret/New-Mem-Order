@@ -13,8 +13,10 @@
 
 #define MAX_TAGS 4096
 
-static int sig_of_line(const char *line, char *sig, long long *ret) {
+static int sig_of_line(const char *line, char *sig, long long *ret,
+                       long long *arg0) {
     const char *p = line;
+    *arg0 = 0;
     while (isdigit((unsigned char)*p) || isspace((unsigned char)*p)) p++;
     const char *name = p, *op = 0;
     if (!strncmp(p, "<... ", 5)) {              /* resumed */
@@ -27,6 +29,9 @@ static int sig_of_line(const char *line, char *sig, long long *ret) {
         memcpy(sig, name, ln);
         sig[ln] = '~';                          /* args unseen; own class */
         sig[ln + 1] = 0;
+        /* arg0 is not visible on a resumed line (it was on the
+         * interrupted call's line, already consumed) - stated limit,
+         * not silently guessed: left at 0 */
     } else {
         op = strchr(p, '(');
         if (!op || op == p) return -1;
@@ -37,6 +42,14 @@ static int sig_of_line(const char *line, char *sig, long long *ret) {
         memcpy(sig, p, ln);
         size_t s = ln;
         sig[s++] = ':';
+        /* arg0, real and unguessed: only if the first argument token
+         * parses as a whole integer (fd/size/flags - common); a
+         * string, pointer, or struct leaves it 0, stated not hidden */
+        {
+            char *endp;
+            long long a0 = strtoll(op + 1, &endp, 10);
+            if (endp != op + 1) *arg0 = a0;
+        }
         int depth = 0;
         for (const char *q = op + 1; *q && s < 60; q++) {
             if (*q == '(' || *q == '[' || *q == '{') depth++;
@@ -88,8 +101,8 @@ int nmo_convert_strace(const char *dir, nmo_namer *nm, nmo_stream *out) {
         FILE *fp = fopen(path, "r");
         if (!fp) continue;
         while (fgets(line, sizeof(line), fp)) {
-            long long ret;
-            if (sig_of_line(line, sig, &ret) != 0) continue;
+            long long ret, arg0;
+            if (sig_of_line(line, sig, &ret, &arg0) != 0) continue;
             uint32_t tag = 0;
             for (; tag < out->ntags; tag++)
                 if (!strcmp(out->tag_sig[tag], sig)) break;
@@ -103,8 +116,13 @@ int nmo_convert_strace(const char *dir, nmo_namer *nm, nmo_stream *out) {
             }
             uint64_t v = (uint64_t)ret;
             out->arr[out->n].tag = tag;
+            /* identity still carried from the return value alone -
+             * recurrence semantics unchanged from the single-slot
+             * measurements; arg0 is additional context for kernels,
+             * not a redefinition of what "recurs" */
             out->arr[out->n].name = nmo_name(nm, v, 0);
-            out->arr[out->n].val = v;
+            out->arr[out->n].val[0] = v;
+            out->arr[out->n].val[1] = (uint64_t)arg0;
             out->n++;
             tagcount[tag]++;
         }
