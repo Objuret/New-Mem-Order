@@ -18,9 +18,14 @@
    not correct builds: the builder's scaffolding replaces the machine
    under pressure, reliably, despite sincere intent. BUILD-LAW removes
    the builder's judgment from the loop: mechanical gates, checked by
-   script, and Law 0 — no number is ever reported as the machine's
-   while a gate fails. If you are about to write engine code and
-   `lawcheck` does not exist yet, that is the first thing you build.
+   script (`lawcheck.sh`, repo root), and Law 0 — no number is ever
+   reported as the machine's while a gate fails.
+5. `STATE.md` — the full operational record: architecture as built,
+   every measured number with its verdict and operating point, the
+   findings that cost something, open work in order, how to work here,
+   the vocabulary, and the dated register of Jocke's rulings. It is
+   subordinate to documents 1-4. Everything below is the compressed
+   version of it.
 
 ## The firewall (why this branch exists)
 The prior prototype lives on `claude/build-it-r1yzg9` — 19 phases, a
@@ -35,6 +40,11 @@ It is PRIOR ART, nothing more:
   implements at most 1.5 of MACHINE.md's five layers.
 - Do not check it out, merge it, or copy from it without Jocke's
   explicit instruction.
+
+The same quarantine now applies to `engine/scaffold-v0/` — the retired
+first build of THIS branch. Its numbers are reclassified scaffolding
+data (Law 0 banners mark them); its harnesses refuse to run. It exists
+as the cautionary artifact BUILD-LAW was written from.
 
 ## Working rules (learned the hard way, kept on purpose)
 1. **Concept before construction.** When Jocke states an idea, restate
@@ -57,171 +67,55 @@ It is PRIOR ART, nothing more:
    timidity is scope creep's mirror image and equally unwanted.
 7. **Prior-build names in SOUL.md/DERIVATION.md are historical
    scenery.** They are not an invitation to excavate the old branch.
+8. **Report style, per Jocke's explicit correction:** "Less essay,
+   more improvement." Lead with verdict and numbers; decompose losses
+   mechanically; never bury one; keep chat short (he reads from a
+   phone) — depth goes in the repo. Baselines must be constructible
+   without the machine's edge; the machine-minus-a-layer is an
+   ablation and is labeled so.
 
-## Current state
-- Branch created 2026-07-11: MACHINE.md (the spec) + this file.
-- 2026-07-11, Jocke's go ("the task is to build this thing"):
-  `claims/claim-1-shape-entropy/` built and run — the shape-entropy
-  sweep, claim discipline throughout (coded verdict, parity-enforced,
-  strongest-baseline comparison, controls). **Coded verdict: PASS** on
-  a virtualized Xeon (wall-time only, no PMU): the staged routed
-  design beats the strongest branchy baseline at every N=2..1024 on
-  uniform streams (1.1-2.1x), loses under low-entropy skew exactly as
-  the claim's regime-bound wording predicts. Two findings that matter
-  for the engine: per-element tag-hops LOSE (routed_direct) — the
-  queue-in-cache + straight-line firing plans are the load-bearing
-  parts; and "widening without bound" was NOT demonstrated — the
-  advantage is bounded and regime-dependent. See that directory's
-  README and results/verdict.json.
-- 2026-07-11, Jocke: "Build it fully." THE ENGINE now exists:
-  `engine/` — all five layers as an embeddable runtime (fixed 16-op
-  vocabulary; validated arrangements; tag-indexed road table; paving
-  on first arrival, to slotted plans and optionally to real machine
-  code via cc+dlopen; batch circulation with liveness-dying
-  intermediates; exits-only with result matrix, naming, channels).
-  Differential tests: walker/plan/jit bit-identical on random
-  arrangements. Claims measured through it: **claim 2 PASS**
-  (circulation 1.5-3.2x over stepping, jit roads ~9x, advantage grows
-  with depth), **claim 3 PASS** (traffic ratio = intermediates/exits,
-  128x with recurrence, decode-verified), **claim 4 INCONCLUSIVE —
-  real finding**: v0 arrangement encoding is ~8x fatter per op than
-  branchy code (fits L2, but doesn't beat compiled code on bytes;
-  packing is the named target). Claim 5 still needs Jocke's phone.
-- Measured to date: claims 1, 2, 3 PASS; 4 open on representation
-  fatness; 5 PARKED by Jocke ("I don't care about this", 2026-07-11).
-  All verdicts coded, none narrated.
-- 2026-07-11, niche engagement #1 (`niche/syscall-telemetry/`),
-  Jocke's direction "just try it with the real programs installed":
-  real strace traffic of real programs, imposed enrichment kernels,
-  one definition both sides, memoized baseline allowed. **Coded
-  verdict: LOSS** - 3.61 vs 10.07 ns/event at entropy 3.4 bits and
-  kernel depth ~12. Operating point and mechanical decomposition in
-  that README (regime is predictor-territory per claim 1's own map;
-  ~4-6ns/event v0 engine bookkeeping has nothing to amortize against
-  at this depth; memo doesn't pay when compute is this cheap). This is
-  kill-condition evidence at ONE operating point, recorded, not
-  generalized - next engagement should aim where the measured map
-  points: deeper per-event work and/or higher kind-entropy traffic.
-- PMU accounting: Jocke has no bare-metal Linux; WSL also exposes no
-  PMU. Independent reproduction available to him anytime via the
-  claims' run.sh scripts under WSL; counters remain unmeasured.
-- Layer-2 INTERPRETATION flag: explained to Jocke (it marks assistant
-  wording awaiting his confirmation); response pending, nothing
-  blocked on it.
-- 2026-07-11, Jocke: "BUILD-LAW.md is on origin/machine - merge it and
-  comply before touching the engine again." Merged. `lawcheck.sh` now
-  implements every gate CHECK at repo root; run against the current
-  tree it FAILS (fabric absent - v0 is a monolith with a manager),
-  which is the correct reading. Law 0 consequences, executed: all
-  v0-engine measurements (claims 2, 3, 4 and niche #1) RECLASSIFIED as
-  scaffolding measurements via banners in their READMEs; their run.sh
-  harnesses now run lawcheck first and REFUSE while gates fail. Claim
-  1 stands as a dispatch-mechanism study (no engine involved; its
-  README already scopes it so). Engine work was FROZEN until a
-  fabric/edge v1 existed that passes lawcheck.
-- 2026-07-11, v1 BUILT AND LAWFUL: engine/fabric (arrive + walker,
-  two functions, no manager) + engine/edge (plant/pave/name/channel/
-  convert, all compromises in EMULATION.md) + engine/harness
-  (differential, measure, rematch). lawcheck PASSES all six gates.
-  v0 moved to engine/scaffold-v0, its harnesses retired. The
-  shape-preserving edge (G5) proved v0's flattening: same real
-  traffic = 688 tags / 4.56 bits, not 65 / 3.44.
-- 2026-07-11, niche rematch, LAWFUL WIN: real strace traffic, same
-  kernels both sides (one tree definition), machine 3.11 ns/event vs
-  strongest conventional 4.83 (switch; hash-memo switch 4.91) - coded
-  verdict WIN, ranges disjoint, two ledgers (paving 5.9s/688 roads,
-  convert 0.7us/event in emulation ledger). Ablation recorded: edge +
-  flat loop without fabric = 2.22, so fabric overhead ~0.9ns is the
-  named next target. bl_named-style opponents (consuming the machine's
-  own carried names) are classified as ablations, not baselines - an
-  opponent must be constructible without the machine's edge.
-- 2026-07-11, circulation engagement, LAWFUL WIN (engine/results/
-  circulate.json): 3-stage chains (2064 trees), same definitions all
-  sides. Pure circulation 8.55 ns/event beats the compiled-fused
-  ceiling (10.84) - trees-feeding-trees with intermediates dying in
-  registers outruns even single-program compiler fusion, and moves 0
-  intermediate bytes vs the pipeline's 1.58MB (pipeline: 14.40).
-  Full machine (whole-chain matrix under entry name, enabled by
-  plant's transitive single-exit analysis; cycles rejected at plant)
-  1.97 vs strongest conventional fused+hash-memo 3.82: WIN, trimmed
-  ranges disjoint. Layers 4+5 now pay together, lawfully.
-- 2026-07-11, depth sweep S=1,2,4,8 (engine/results/
-  circulate_depth_verdict.json): full machine WINS at every depth and
-  is depth-FLAT (3.0-3.3 ns/event) while every opponent scales with S
-  (pipeline to 42.5, fused to 34.6). Pure circulation beats compiled
-  fusion at every S>=2; pipeline/circulation ratio grows monotonically
-  0.78x->1.98x. Composite coded verdict INCONCLUSIVE kept as coded:
-  the pre-coded fusion-tracking condition misfires at S=1 (single
-  tree, no circulation exists); documented, not rewritten post hoc.
-  Next open build directions: fan-out trees (nexits>1 chains), v1
-  residency accounting (claim 4 through the fabric), richer payloads
-  than u64 at the edge.
-- 2026-07-11, claim 4 via the fabric (engine/results/
-  residency_v1.json): whole-artifact .text both sides, 688 kernels.
-  Machine 99,809B (2.4% of L2, 127.8B/road) vs switch-only loop
-  52,209B - coded INCONCLUSIVE: fits trivially, not smaller. v0's 8x
-  encoding fatness is GONE (hot form is machine code both sides); the
-  residual 1.9x is per-road prologues + table-indirect calls vs one
-  shared switch loop. Remaining open directions: fan-out trees,
-  richer payloads at the edge, the 1.9x residency gap.
-- 2026-07-11, fan-out capability BUILT and lawful: multi-exit
-  conclusions supported end-to-end (walker/paved/matrix); result
-  matrix generalized to per-root strides with the single-exit fast
-  layout preserved (naive generalization cost 0.7ns on the flagship
-  path - caught by in-session A/B, fixed via dual layout, residual
-  ~0.1-0.2ns). Matrix restricted to DAG roots (interior trees receive
-  nameless values, correctly get no matrix). G1 now asserts on the
-  dedicated dispatch primitive nmo_road_entry (8 instructions).
-  Differential covers fan-out. NOTE: VM noise floor widened intra-day
-  (consecutive identical runs swing 25%); post-change rematch means
-  favor the machine (3.71 vs 4.27) but ranges overlap - INCONCLUSIVE
-  as coded, recorded beside the standing WIN.
-- 2026-07-11, fan-out engagement, LAWFUL WIN (engine/results/
-  fanout.json): one arrival -> two conclusions (entry forks to two
-  boundary trees, 2064 trees, real stream). Pure fan-out circulation
-  9.23 ns/event beats compiled-fused 10.32 and pipeline 13.26 (1.58MB
-  fork intermediates vs 0). Full machine with strided matrix 3.58 vs
-  strongest conventional fused+hash 4.73: WIN, trimmed ranges
-  disjoint, despite the noisy VM. Scoreboard: routing WIN, circulation
-  WIN (depth-flat), fan-out WIN; claim 4 open on the 1.9x residency
-  gap; claim 5 parked.
-- 2026-07-12 (session continued under Sonnet 5 after a mid-session
-  /model switch - same branch, same discipline): richer-than-u64
-  payloads BUILT and lawful. Arrivals now carry NMO_MAX_SLOTS=2
-  independent values; an INPUT node addresses one by index; the edge
-  parses a real second value from strace (arg0, where numeric)
-  alongside the return value - 79% of real events carry a genuinely
-  nonzero second slot. `kernel_rich`'s short-transfer fork
-  (ret < arg0) needs both slots alive at once, unbuildable from one
-  carried u64. REAL FINDING, caught by the differential before
-  anything shipped: the result matrix keys recurrence on the carried
-  name (slot 0 alone), so a root reading another slot could replay a
-  stale conclusion for a repeated name. Fixed at the correct layer
-  (plant.c: root_uses_other_slot) - any root reading a slot beyond 0
-  is matrix-ineligible and always computes fresh; G3 ("identity is
-  carried, never derived") applied honestly means a tag needing more
-  than the carried identity isn't a memoization candidate. Verified in
-  the recorded run (`matrix_attached: false` throughout). All four
-  pre-existing engagements use only slot-0 kernels, are unaffected,
-  and their recorded verdicts stand (spot-checked after the change:
-  measure/rematch/circulate WIN, fanout INCONCLUSIVE matching the
-  already-documented VM-noise pattern, not a regression). Second
-  honest finding: paved+matrix costs ~1.2ns more than plain paved even
-  with the matrix inactive - the bookkeeping arrays still exist and
-  cost a branch; named, not hidden. See engine/results/richpayload.json.
-- 2026-07-12, residency gap attacked: paving defaults to size-honest
-  flags (-Os, no 16B alignment, no CFI pads; NMO_PAVE_FLAGS
-  overrides). 99.2B/road (was 127.8), gap 1.54x (was 1.9x), rematch
-  speed A/B'd in-session: WIN at ratio 1.73, no regression. Claim 4
-  stays INCONCLUSIVE as coded; residual ~47B/road is the structural
-  price of independently callable roads (ret + exit-write + symbol).
-- 2026-07-12, reproduce.sh at repo root: one-command independent
-  reproduction of every lawful measurement (lawcheck -> differential
-  -> all five engagements -> residency), for Jocke's WSL or any Linux
-  box with gcc+python3. Its own verification run doubled as a fresh
-  re-verdict on this VM: rematch WIN 2.72 vs 4.62, circulate WIN 2.79
-  vs 5.59, fanout WIN 5.21 vs 7.06 (disjoint this time - the earlier
-  fanout INCONCLUSIVE was VM noise, as suspected). Residency 99.2B/road
-  INCONCLUSIVE unchanged.
-  NEXT: quiet-hardware reruns when available; open concept work:
-  Layer-2 ratification still pending with Jocke.
+## How to work here (the rest is STATE.md §8)
+```
+./lawcheck.sh        # FIRST. Engine work and numbers are forbidden
+                     # while it fails (Law 0).
+make -C engine test  # the differential: walker == paved, matrix
+                     # on == off, order exact. Run after EVERY
+                     # fabric/edge change - it has caught real
+                     # corruption before it shipped.
+./reproduce.sh       # the whole lawful suite, coded verdicts, ~15 min
+```
+Fabric changes additionally get an in-session A/B of the flagship
+rematch (old vs new in one session — this VM's noise floor swings 25%
+across sessions, so cross-session deltas are not evidence).
+
+Needs Jocke, never unilateral: MACHINE.md changes; removing the
+Layer-2 INTERPRETATION flag; structural decisions where the spec is
+silent (options to OPTIONS.md, then STOP); touching either prior
+build; reopening claim 5.
+
+## Current state (2026-07-12 — full record and numbers in STATE.md §5-7)
+- **The machine exists and is lawful**: `engine/fabric` (arrive +
+  walker + dispatch primitive, nothing else) + `engine/edge` (every
+  compromise, registered in EMULATION.md) + `engine/harness`. All six
+  gates PASS. Arrivals carry 2 value slots; trees fan out; chains
+  circulate road-to-road; cyclic wiring is rejected at plant, so every
+  firing provably terminates; the result matrix replays whole-chain,
+  multi-exit conclusions by carried name, and refuses roots whose
+  conclusions the carried identity doesn't cover.
+- **Scoreboard, all coded, all on real traffic** (strace of this box's
+  real programs; 98,733 events, 688 shape tags, 4.56 bits):
+  routing **WIN** (3.11 vs 4.83 ns/event), circulation **WIN** (1.97 vs
+  3.82; pure circulation 8.55 beats even compiled fusion 10.84;
+  depth-FLAT 3.0-3.3 at S=1..8 while opponents scale to 42.5), fan-out
+  **WIN** (3.58 vs 4.73), all trimmed-range disjoint; residency
+  **INCONCLUSIVE** (99.2B/road, 1.9% of L2, but 1.54x the branchy
+  bytes); claim 1 **PASS** (its own apparatus); claim 5 **PARKED** by
+  Jocke. One honest v0 LOSS stands reclassified as scaffolding data.
+- **Verify anything** with `./reproduce.sh` (its own verification run
+  re-verdicted rematch/circulate/fanout as WINs fresh).
+- **Open, in order** (STATE.md §7): quiet-hardware re-verdict (one
+  command, needs a machine); Layer-2 ratification (one line, needs
+  Jocke); niche engagement #2 aimed at deeper/higher-entropy real
+  traffic; multi-value interior handoffs (structural — options first);
+  the 1.54x residency residual; vocabulary-pressure watch (THE
+  standing kill threat).
