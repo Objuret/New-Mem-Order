@@ -215,5 +215,13 @@ It is PRIOR ART, nothing more:
   speed A/B'd in-session: WIN at ratio 1.73, no regression. Claim 4
   stays INCONCLUSIVE as coded; residual ~47B/road is the structural
   price of independently callable roads (ret + exit-write + symbol).
-  NEXT: re-verdict everything on quiet hardware; open concept work:
+- 2026-07-12, reproduce.sh at repo root: one-command independent
+  reproduction of every lawful measurement (lawcheck -> differential
+  -> all five engagements -> residency), for Jocke's WSL or any Linux
+  box with gcc+python3. Its own verification run doubled as a fresh
+  re-verdict on this VM: rematch WIN 2.72 vs 4.62, circulate WIN 2.79
+  vs 5.59, fanout WIN 5.21 vs 7.06 (disjoint this time - the earlier
+  fanout INCONCLUSIVE was VM noise, as suspected). Residency 99.2B/road
+  INCONCLUSIVE unchanged.
+  NEXT: quiet-hardware reruns when available; open concept work:
   Layer-2 ratification still pending with Jocke.
