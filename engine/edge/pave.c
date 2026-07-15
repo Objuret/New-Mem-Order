@@ -61,9 +61,19 @@ int nmo_pave_all(nmo_fabric *f, const char *dir, const char *cc) {
         if (f->roads[t].tree)
             emit_road(o, f->roads[t].tree);
     fclose(o);
+    /* road-residency flags: straight-line single-block roads gain
+     * nothing from -O2-over--Os or 16B function alignment, and each
+     * road is entered indirectly through the table, so per-function
+     * padding and CFI landing pads are pure resident fat. NMO_PAVE_
+     * FLAGS overrides for experiments; the default is the measured
+     * Pareto point (size down, rematch speed unchanged - see
+     * results/residency_v1.json history). */
+    const char *flags = getenv("NMO_PAVE_FLAGS");
+    if (!flags)
+        flags = "-Os -falign-functions=1 -fcf-protection=none";
     snprintf(cmd, sizeof(cmd),
-             "%s -O2 -shared -fPIC -I%s -o %s %s 2>/dev/null",
-             cc ? cc : "cc", FABRIC_INC, so, cpath);
+             "%s %s -shared -fPIC -I%s -o %s %s 2>/dev/null",
+             cc ? cc : "cc", flags, FABRIC_INC, so, cpath);
     if (system(cmd) != 0) return -1;
     void *dl = dlopen(so, RTLD_NOW | RTLD_LOCAL);
     if (!dl) return -1;

@@ -209,5 +209,11 @@ It is PRIOR ART, nothing more:
   honest finding: paved+matrix costs ~1.2ns more than plain paved even
   with the matrix inactive - the bookkeeping arrays still exist and
   cost a branch; named, not hidden. See engine/results/richpayload.json.
-  NEXT: the 1.9x residency gap, then re-verdict everything on quiet
-  hardware.
+- 2026-07-12, residency gap attacked: paving defaults to size-honest
+  flags (-Os, no 16B alignment, no CFI pads; NMO_PAVE_FLAGS
+  overrides). 99.2B/road (was 127.8), gap 1.54x (was 1.9x), rematch
+  speed A/B'd in-session: WIN at ratio 1.73, no regression. Claim 4
+  stays INCONCLUSIVE as coded; residual ~47B/road is the structural
+  price of independently callable roads (ret + exit-write + symbol).
+  NEXT: re-verdict everything on quiet hardware; open concept work:
+  Layer-2 ratification still pending with Jocke.

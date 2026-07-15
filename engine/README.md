@@ -54,6 +54,15 @@ loop). v0's 8x arrangement-encoding fatness is gone (the hot form is
 machine code on both sides now); the remaining 1.9x is the next
 residency target. Predictor-state half remains unmeasurable, recorded
 as unmeasured.
+UPDATE (2026-07-12): paving now defaults to size-honest flags
+(-Os -falign-functions=1 -fcf-protection=none; NMO_PAVE_FLAGS
+overrides) - straight-line single-block roads gain nothing from -O2 or
+16B alignment, and each road is entered indirectly, so the padding and
+CFI pads were pure resident fat. Measured: 99.2B/road (was 127.8),
+gap vs branchy 1.54x (was 1.9x), rematch speed unchanged (WIN, ratio
+1.73, top of the day's band). Verdict stays INCONCLUSIVE as coded; the
+remaining ~47B/road is per-road ret + exit-write sequence + symbol
+overhead - the structural price of independently callable roads.
 
 Fan-out capability (this commit): trees may conclude in multiple
 boundary exits; the result matrix generalizes to per-root strides
